@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalculations';
@@ -61,18 +60,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       
       {/* Federal Tax Card */}
       <Card className="overflow-hidden border border-border/50 bg-blue-50 dark:bg-blue-950/20 backdrop-blur-sm">
-        <CardContent className="p-6">
-          <div className="space-y-6">
-            <div className="flex items-center mb-3">
+        <CardContent className="p-5">
+          <div className="space-y-5">
+            <div className="flex items-center mb-2">
               <DollarSignIcon className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
               <h3 className="text-base font-medium">Federal Tax Results</h3>
             </div>
             
-            <div className="flex flex-col items-center justify-center text-center mb-6">
+            <div className="flex flex-col items-center justify-center text-center mb-5">
               <p className="text-sm text-muted-foreground mb-1">
                 {isRefund ? "Federal Refund" : "Federal Amount Due"}
               </p>
-              <div className={`flex items-center text-2xl md:text-3xl font-semibold min-w-32 ${isRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <div className={`flex items-center text-3xl md:text-4xl font-semibold min-w-32 ${isRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
                 <AnimatedNumber 
                   value={Math.abs(results.refundOrOwed)}
                   formatter={(val) => formatCurrency(val)}
@@ -81,7 +80,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
               <div className="flex flex-col">
                 <p className="text-xs text-muted-foreground">Taxable Income</p>
                 <div className="text-base font-medium min-w-24 text-right">
@@ -111,7 +110,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col">
                 <p className="text-xs text-muted-foreground">Marginal Rate</p>
                 <div className="text-base font-medium min-w-24 text-right">
@@ -176,9 +175,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       {includeStateTaxes && stateResults && (
         <>
           <Card className="overflow-hidden border border-border/50 bg-green-50 dark:bg-green-950/20 backdrop-blur-sm">
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                <div className="flex items-center mb-3">
+            <CardContent className="p-5">
+              <div className="space-y-5">
+                <div className="flex items-center mb-2">
                   <GlobeIcon className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
                   <h3 className="text-base font-medium">{selectedState} State Tax Results</h3>
                 </div>
@@ -192,11 +191,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   </div>
                 ) : (
                   <>
-                    <div className="flex flex-col items-center justify-center text-center mb-6">
+                    <div className="flex flex-col items-center justify-center text-center mb-5">
                       <p className="text-sm text-muted-foreground mb-1">
                         {stateResults.refundOrOwed > 0 ? "State Refund" : "State Amount Due"}
                       </p>
-                      <div className={`flex items-center text-2xl md:text-3xl font-semibold min-w-32 ${stateResults.refundOrOwed > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      <div className={`flex items-center text-3xl md:text-4xl font-semibold min-w-32 ${stateResults.refundOrOwed > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
                         <AnimatedNumber 
                           value={Math.abs(stateResults.refundOrOwed)}
                           formatter={(val) => formatCurrency(val)}
@@ -205,7 +204,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
                       <div className="flex flex-col">
                         <p className="text-xs text-muted-foreground">Taxable Income</p>
                         <div className="text-base font-medium min-w-24 text-right">
@@ -235,7 +234,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="flex flex-col">
                         <p className="text-xs text-muted-foreground">Marginal Rate</p>
                         <div className="text-base font-medium min-w-24 text-right">
