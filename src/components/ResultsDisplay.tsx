@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalculations';
@@ -43,7 +44,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   value={Math.abs(totalRefund)}
                   formatter={(val) => formatCurrency(val)}
                   duration={800}
-                  className="min-w-32"
+                  className="min-w-44"
                 />
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -141,7 +142,7 @@ const DetailCard: React.FC<DetailCardProps> = ({
             {icon}
             <p className="text-sm text-muted-foreground">{label}</p>
           </div>
-          <div className={`text-xl font-medium ${isRefund ? 'text-emerald-500' : 'text-rose-500'} min-w-24 text-right`}>
+          <div className={`text-xl font-medium ${isRefund ? 'text-emerald-500' : 'text-rose-500'} min-w-32 text-right`}>
             {showSign && <span>{isRefund ? '+' : '-'} </span>}
             <AnimatedNumber 
               value={Math.abs(value)}
@@ -241,13 +242,13 @@ const FederalTaxDetails: React.FC<FederalTaxDetailsProps> = ({ results }) => {
                     <span className="mr-2 text-muted-foreground">
                       {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
                     </span>
-                    <span className="font-medium">{formatCurrency(bracket.amount)}</span>
+                    <span className="font-medium min-w-24 text-right">{formatCurrency(bracket.amount)}</span>
                   </div>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
                 <span>Total Federal Tax</span>
-                <span>{formatCurrency(results.taxLiability)}</span>
+                <span className="min-w-24 text-right">{formatCurrency(results.taxLiability)}</span>
               </div>
             </div>
           </CardContent>
@@ -341,13 +342,13 @@ const StateTaxDetails: React.FC<StateTaxDetailsProps> = ({ stateResults, selecte
                           <span className="mr-2 text-muted-foreground">
                             {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
                           </span>
-                          <span className="font-medium">{formatCurrency(bracket.amount)}</span>
+                          <span className="font-medium min-w-24 text-right">{formatCurrency(bracket.amount)}</span>
                         </div>
                       </div>
                     ))}
                     <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
                       <span>Total {selectedState} State Tax</span>
-                      <span>{formatCurrency(stateResults.taxLiability)}</span>
+                      <span className="min-w-24 text-right">{formatCurrency(stateResults.taxLiability)}</span>
                     </div>
                   </div>
                 </CardContent>
