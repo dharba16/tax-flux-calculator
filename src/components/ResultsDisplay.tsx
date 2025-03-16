@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalculations';
@@ -81,27 +82,27 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center text-center">
                 <p className="text-xs text-muted-foreground">Taxable Income</p>
-                <div className="text-base font-medium min-w-24 text-right">
+                <div className="text-base font-medium min-w-24">
                   <AnimatedNumber 
                     value={results.taxableIncome}
                     formatter={formatCurrency}
                   />
                 </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center text-center">
                 <p className="text-xs text-muted-foreground">Tax Liability</p>
-                <div className="text-base font-medium min-w-24 text-right">
+                <div className="text-base font-medium min-w-24">
                   <AnimatedNumber 
                     value={results.taxLiability}
                     formatter={formatCurrency}
                   />
                 </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center text-center">
                 <p className="text-xs text-muted-foreground">Effective Rate</p>
-                <div className="text-base font-medium min-w-24 text-right">
+                <div className="text-base font-medium min-w-24">
                   <AnimatedNumber 
                     value={results.effectiveTaxRate}
                     formatter={formatPercentage}
@@ -111,18 +112,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
             </div>
             
             <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center text-center">
                 <p className="text-xs text-muted-foreground">Marginal Rate</p>
-                <div className="text-base font-medium min-w-24 text-right">
+                <div className="text-base font-medium min-w-24">
                   <AnimatedNumber 
                     value={results.marginalRate}
                     formatter={formatPercentage}
                   />
                 </div>
               </div>
-              <div className="flex flex-col">
+              <div className="flex flex-col items-center text-center">
                 <p className="text-xs text-muted-foreground">Deduction</p>
-                <div className="text-base font-medium min-w-24 text-right">
+                <div className="text-base font-medium min-w-24">
                   <AnimatedNumber 
                     value={results.deductionAmount}
                     formatter={formatCurrency}
@@ -205,27 +206,27 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col items-center text-center">
                         <p className="text-xs text-muted-foreground">Taxable Income</p>
-                        <div className="text-base font-medium min-w-24 text-right">
+                        <div className="text-base font-medium min-w-24">
                           <AnimatedNumber 
                             value={stateResults.taxableIncome}
                             formatter={formatCurrency}
                           />
                         </div>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col items-center text-center">
                         <p className="text-xs text-muted-foreground">Tax Liability</p>
-                        <div className="text-base font-medium min-w-24 text-right">
+                        <div className="text-base font-medium min-w-24">
                           <AnimatedNumber 
                             value={stateResults.taxLiability}
                             formatter={formatCurrency}
                           />
                         </div>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col items-center text-center">
                         <p className="text-xs text-muted-foreground">Effective Rate</p>
-                        <div className="text-base font-medium min-w-24 text-right">
+                        <div className="text-base font-medium min-w-24">
                           <AnimatedNumber 
                             value={stateResults.effectiveTaxRate}
                             formatter={formatPercentage}
@@ -235,18 +236,18 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col">
+                      <div className="flex flex-col items-center text-center">
                         <p className="text-xs text-muted-foreground">Marginal Rate</p>
-                        <div className="text-base font-medium min-w-24 text-right">
+                        <div className="text-base font-medium min-w-24">
                           <AnimatedNumber 
                             value={stateResults.marginalRate}
                             formatter={formatPercentage}
                           />
                         </div>
                       </div>
-                      <div className="flex flex-col">
+                      <div className="flex flex-col items-center text-center">
                         <p className="text-xs text-muted-foreground">Deduction</p>
-                        <div className="text-base font-medium min-w-24 text-right">
+                        <div className="text-base font-medium min-w-24">
                           <AnimatedNumber 
                             value={stateResults.deductionAmount}
                             formatter={formatCurrency}
