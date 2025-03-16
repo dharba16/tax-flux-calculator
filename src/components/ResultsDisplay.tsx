@@ -69,6 +69,40 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ results }) => {
           formatter={formatCurrency}
         />
       </div>
+      
+      {/* Tax Bracket Breakdown */}
+      {results.bracketBreakdown.length > 0 && (
+        <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardContent className="p-4">
+            <h3 className="text-sm font-medium mb-3">Tax Bracket Breakdown</h3>
+            <div className="space-y-2">
+              {results.bracketBreakdown.map((bracket, index) => (
+                <div key={index} className="flex justify-between items-center text-sm">
+                  <div className="flex items-center">
+                    <div 
+                      className="w-3 h-3 rounded-full mr-2" 
+                      style={{ 
+                        backgroundColor: `hsl(${210 - index * 25}, ${70}%, ${50 + index * 5}%)` 
+                      }}
+                    />
+                    <span>{formatPercentage(bracket.rate)} bracket</span>
+                  </div>
+                  <div className="flex items-center">
+                    <span className="mr-2 text-muted-foreground">
+                      {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
+                    </span>
+                    <span className="font-medium">{formatCurrency(bracket.amount)}</span>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
+                <span>Total Tax</span>
+                <span>{formatCurrency(results.taxLiability)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
