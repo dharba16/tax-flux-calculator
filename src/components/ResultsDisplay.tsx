@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalculations';
@@ -39,6 +38,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 Total Tax Result
               </h3>
               <div className={`flex items-center text-4xl md:text-5xl font-semibold ${isTotalRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
+                <span className="mr-1">{isTotalRefund ? '' : '-'}</span>
                 <AnimatedNumber 
                   value={Math.abs(totalRefund)}
                   formatter={(val) => formatCurrency(val)}
@@ -61,9 +61,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
               <DetailCard
                 label="Federal Tax"
                 value={federalRefund}
-                formatter={(value) => `${value >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(value))}`}
+                formatter={(value) => formatCurrency(Math.abs(value))}
                 isRefund={isFederalRefund}
                 icon={<DollarSignIcon className="w-4 h-4" />}
+                showSign={true}
               />
               
               {/* State refund card (if state taxes included) */}
@@ -71,9 +72,10 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                 <DetailCard
                   label={`${selectedState} State Tax`}
                   value={stateRefund}
-                  formatter={(value) => `${value >= 0 ? '+' : '-'} ${formatCurrency(Math.abs(value))}`}
+                  formatter={(value) => formatCurrency(Math.abs(value))}
                   isRefund={isStateRefund}
                   icon={<GlobeIcon className="w-4 h-4" />}
+                  showSign={true}
                 />
               )}
             </div>
@@ -118,6 +120,7 @@ interface DetailCardProps {
   isState?: boolean;
   isRefund?: boolean;
   icon?: React.ReactNode;
+  showSign?: boolean;
 }
 
 const DetailCard: React.FC<DetailCardProps> = ({ 
@@ -126,7 +129,8 @@ const DetailCard: React.FC<DetailCardProps> = ({
   formatter, 
   isState = false,
   isRefund = false,
-  icon = null
+  icon = null,
+  showSign = false
 }) => {
   return (
     <Card className={`overflow-hidden border border-border/50 ${isState ? 'bg-secondary/5' : 'bg-card/50'} backdrop-blur-sm`}>
@@ -137,8 +141,9 @@ const DetailCard: React.FC<DetailCardProps> = ({
             <p className="text-sm text-muted-foreground">{label}</p>
           </div>
           <div className={`text-xl font-medium ${isRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
+            {showSign && <span>{isRefund ? '+' : '-'} </span>}
             <AnimatedNumber 
-              value={value}
+              value={Math.abs(value)}
               formatter={formatter}
             />
           </div>
