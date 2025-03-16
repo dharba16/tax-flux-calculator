@@ -43,6 +43,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
                   value={Math.abs(totalRefund)}
                   formatter={(val) => formatCurrency(val)}
                   duration={800}
+                  className="min-w-32"
                 />
               </div>
               <div className="flex items-center text-sm text-muted-foreground">
@@ -140,7 +141,7 @@ const DetailCard: React.FC<DetailCardProps> = ({
             {icon}
             <p className="text-sm text-muted-foreground">{label}</p>
           </div>
-          <div className={`text-xl font-medium ${isRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
+          <div className={`text-xl font-medium ${isRefund ? 'text-emerald-500' : 'text-rose-500'} min-w-24 text-right`}>
             {showSign && <span>{isRefund ? '+' : '-'} </span>}
             <AnimatedNumber 
               value={Math.abs(value)}
