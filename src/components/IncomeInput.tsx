@@ -10,32 +10,44 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { FilingStatus } from '@/utils/taxCalculations';
+import { Separator } from '@/components/ui/separator';
 
 interface IncomeInputProps {
   income: number;
-  withholding: number;
+  federalWithholding: number;
+  stateWithholding: number;
   filingStatus: FilingStatus;
   setIncome: (value: number) => void;
-  setWithholding: (value: number) => void;
+  setFederalWithholding: (value: number) => void;
+  setStateWithholding: (value: number) => void;
   setFilingStatus: (status: FilingStatus) => void;
+  includeStateTaxes: boolean;
 }
 
 const IncomeInput: React.FC<IncomeInputProps> = ({
   income,
-  withholding,
+  federalWithholding,
+  stateWithholding,
   filingStatus,
   setIncome,
-  setWithholding,
-  setFilingStatus
+  setFederalWithholding,
+  setStateWithholding,
+  setFilingStatus,
+  includeStateTaxes
 }) => {
   const handleIncomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
     setIncome(value ? parseInt(value, 10) : 0);
   };
 
-  const handleWithholdingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFederalWithholdingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/[^0-9]/g, '');
-    setWithholding(value ? parseInt(value, 10) : 0);
+    setFederalWithholding(value ? parseInt(value, 10) : 0);
+  };
+
+  const handleStateWithholdingChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/[^0-9]/g, '');
+    setStateWithholding(value ? parseInt(value, 10) : 0);
   };
 
   const formatInputValue = (value: number) => {
@@ -66,23 +78,52 @@ const IncomeInput: React.FC<IncomeInputProps> = ({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="withholding" className="text-sm font-medium">
-            Tax Withholding
-          </Label>
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-              $
-            </span>
-            <Input
-              id="withholding"
-              type="text"
-              inputMode="numeric"
-              className="pl-7 h-12 text-lg"
-              value={formatInputValue(withholding)}
-              onChange={handleWithholdingChange}
-              placeholder="Amount already withheld"
-            />
+        <div>
+          <h3 className="text-sm font-medium mb-3">Tax Withholding</h3>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="federal-withholding" className="text-sm font-medium flex items-center">
+                <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 py-0.5 px-2 rounded mr-2">Federal</span>
+                Federal Withholding
+              </Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  $
+                </span>
+                <Input
+                  id="federal-withholding"
+                  type="text"
+                  inputMode="numeric"
+                  className="pl-7 h-12 text-lg"
+                  value={formatInputValue(federalWithholding)}
+                  onChange={handleFederalWithholdingChange}
+                  placeholder="Federal tax already withheld"
+                />
+              </div>
+            </div>
+
+            {includeStateTaxes && (
+              <div className="space-y-2">
+                <Label htmlFor="state-withholding" className="text-sm font-medium flex items-center">
+                  <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 py-0.5 px-2 rounded mr-2">State</span>
+                  State Withholding
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    $
+                  </span>
+                  <Input
+                    id="state-withholding"
+                    type="text"
+                    inputMode="numeric"
+                    className="pl-7 h-12 text-lg"
+                    value={formatInputValue(stateWithholding)}
+                    onChange={handleStateWithholdingChange}
+                    placeholder="State tax already withheld"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

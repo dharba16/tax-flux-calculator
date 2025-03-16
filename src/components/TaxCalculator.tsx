@@ -37,7 +37,8 @@ const US_STATES = [
 const TaxCalculator: React.FC = () => {
   // Input state
   const [income, setIncome] = useState<number>(75000);
-  const [withholding, setWithholding] = useState<number>(12000);
+  const [federalWithholding, setFederalWithholding] = useState<number>(12000);
+  const [stateWithholding, setStateWithholding] = useState<number>(3000);
   const [filingStatus, setFilingStatus] = useState<FilingStatus>('single');
   const [deductions, setDeductions] = useState<number>(0);
   const [useStandardDeduction, setUseStandardDeduction] = useState<boolean>(true);
@@ -56,7 +57,7 @@ const TaxCalculator: React.FC = () => {
     // Calculate federal taxes
     const result = calculateTaxes({
       income,
-      withholding,
+      withholding: federalWithholding,
       filingStatus,
       deductions,
       useStandardDeduction
@@ -75,7 +76,8 @@ const TaxCalculator: React.FC = () => {
         filingStatus,
         deductions,
         useStandardDeduction,
-        state: selectedState
+        state: selectedState,
+        withholding: stateWithholding
       });
       
       // Only set state results if we got a valid result
@@ -93,7 +95,7 @@ const TaxCalculator: React.FC = () => {
       setStateResults(null);
       setStateEligibleDeductions([]);
     }
-  }, [income, withholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState]);
+  }, [income, federalWithholding, stateWithholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState]);
 
   return (
     <div className="w-full max-w-3xl mx-auto">
@@ -117,11 +119,14 @@ const TaxCalculator: React.FC = () => {
                     <TabsContent value="income" className="mt-0">
                       <IncomeInput
                         income={income}
-                        withholding={withholding}
+                        federalWithholding={federalWithholding}
+                        stateWithholding={stateWithholding}
                         filingStatus={filingStatus}
                         setIncome={setIncome}
-                        setWithholding={setWithholding}
+                        setFederalWithholding={setFederalWithholding}
+                        setStateWithholding={setStateWithholding}
                         setFilingStatus={setFilingStatus}
+                        includeStateTaxes={includeStateTaxes}
                       />
                       
                       <div className="mt-6 flex items-center justify-between">

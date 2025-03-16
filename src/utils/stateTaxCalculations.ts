@@ -1,4 +1,3 @@
-
 import { FilingStatus } from './taxCalculations';
 import { DeductionInfo } from './deductionEligibility';
 
@@ -8,6 +7,7 @@ export interface StateTaxInputs {
   deductions: number;
   useStandardDeduction: boolean;
   state: string;
+  withholding?: number; // Making withholding optional with a default
 }
 
 export interface StateTaxResults {
@@ -62,7 +62,6 @@ const STATE_TAX_BRACKETS = {
       { min: 921096, max: Infinity, rate: 0.123 },
     ],
   },
-  // New York State Tax Brackets
   "New York": {
     single: [
       { min: 0, max: 8500, rate: 0.04 },
@@ -92,19 +91,16 @@ const STATE_TAX_BRACKETS = {
       { min: 1616451, max: Infinity, rate: 0.0882 },
     ],
   },
-  // Texas has no state income tax
   "Texas": {
     single: [{ min: 0, max: Infinity, rate: 0 }],
     married: [{ min: 0, max: Infinity, rate: 0 }],
     headOfHousehold: [{ min: 0, max: Infinity, rate: 0 }],
   },
-  // Florida has no state income tax
   "Florida": {
     single: [{ min: 0, max: Infinity, rate: 0 }],
     married: [{ min: 0, max: Infinity, rate: 0 }],
     headOfHousehold: [{ min: 0, max: Infinity, rate: 0 }],
   },
-  // Washington has no state income tax
   "Washington": {
     single: [{ min: 0, max: Infinity, rate: 0 }],
     married: [{ min: 0, max: Infinity, rate: 0 }],
@@ -144,7 +140,7 @@ const STATE_STANDARD_DEDUCTION = {
  * Calculate state taxes based on provided inputs
  */
 export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | null {
-  const { income, filingStatus, deductions, useStandardDeduction, state } = inputs;
+  const { income, filingStatus, deductions, useStandardDeduction, state, withholding = 0 } = inputs;
   
   // Check if we have tax data for this state
   if (!STATE_TAX_BRACKETS[state]) {
@@ -154,7 +150,7 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
       effectiveTaxRate: 0,
       marginalRate: 0,
       deductionAmount: 0,
-      refundOrOwed: 0,
+      refundOrOwed: withholding,
       bracketBreakdown: [{
         rate: 0,
         amount: 0,
@@ -206,8 +202,8 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
   // Calculate effective tax rate
   const effectiveTaxRate = taxableIncome > 0 ? taxLiability / taxableIncome : 0;
   
-  // Set refundOrOwed to negative tax liability (since we don't have withholding for state taxes)
-  const refundOrOwed = -taxLiability; // State taxes are always owed (negative refund)
+  // Calculate refund or amount owed, now using the state withholding amount
+  const refundOrOwed = withholding - taxLiability;
   
   return {
     taxableIncome,
@@ -310,4 +306,3 @@ export function getStateEligibleDeductions(
   
   return deductions;
 }
-
