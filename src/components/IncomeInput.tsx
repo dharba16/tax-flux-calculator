@@ -141,6 +141,8 @@ const IncomeInput: React.FC<IncomeInputProps> = ({
             <SelectContent>
               <SelectItem value="single" className="text-base">Single</SelectItem>
               <SelectItem value="married" className="text-base">Married Filing Jointly</SelectItem>
+              <SelectItem value="marriedSeparate" className="text-base">Married Filing Separately</SelectItem>
+              <SelectItem value="qualifiedWidow" className="text-base">Qualifying Surviving Spouse</SelectItem>
               <SelectItem value="headOfHousehold" className="text-base">Head of Household</SelectItem>
             </SelectContent>
           </Select>

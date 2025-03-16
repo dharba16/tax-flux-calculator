@@ -32,6 +32,17 @@ const DeductionsInput: React.FC<DeductionsInputProps> = ({
 
   const standardDeductionAmount = STANDARD_DEDUCTION[filingStatus];
 
+  const getFilingStatusLabel = (status: FilingStatus): string => {
+    switch (status) {
+      case 'single': return 'Single';
+      case 'married': return 'Married Filing Jointly';
+      case 'marriedSeparate': return 'Married Filing Separately';
+      case 'qualifiedWidow': return 'Qualifying Surviving Spouse';
+      case 'headOfHousehold': return 'Head of Household';
+      default: return status;
+    }
+  };
+
   return (
     <div className="animate-fade-in space-y-6">
       <div className="flex items-center justify-between">
@@ -40,7 +51,7 @@ const DeductionsInput: React.FC<DeductionsInputProps> = ({
             Use Standard Deduction
           </Label>
           <p className="text-sm text-muted-foreground">
-            {formatCurrency(standardDeductionAmount)} for {filingStatus === 'single' ? 'Single' : filingStatus === 'married' ? 'Married Filing Jointly' : 'Head of Household'}
+            {formatCurrency(standardDeductionAmount)} for {getFilingStatusLabel(filingStatus)}
           </p>
         </div>
         <Switch
