@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DeductionInfo } from '@/utils/deductionEligibility';
 import { formatCurrency } from '@/utils/taxCalculations';
 import { 
@@ -13,9 +13,12 @@ import {
   Receipt,
   Home,
   Baby,
-  Globe
+  Globe,
+  Check
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import AnimatedNumber from './AnimatedNumber';
+import { Badge } from '@/components/ui/badge';
 
 interface DeductionsEligibilityProps {
   eligibleDeductions: DeductionInfo[];
@@ -34,7 +37,8 @@ const iconMap: Record<string, React.ReactNode> = {
   'receipt': <Receipt className="h-5 w-5" />,
   'home': <Home className="h-5 w-5" />,
   'baby': <Baby className="h-5 w-5" />,
-  'globe': <Globe className="h-5 w-5" />
+  'globe': <Globe className="h-5 w-5" />,
+  'check': <Check className="h-5 w-5" />
 };
 
 const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({ 
@@ -43,13 +47,41 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
   includeStateTaxes = false,
   selectedState = ''
 }) => {
+  // Calculate the total potential deduction amount
+  const calculateTotalPotential = (deductions: DeductionInfo[]) => {
+    return deductions.reduce((total, deduction) => 
+      total + (deduction.eligibleAmount || 0), 0);
+  };
+  
+  const federalTotal = calculateTotalPotential(eligibleDeductions);
+  const stateTotal = calculateTotalPotential(stateEligibleDeductions);
+  
   return (
     <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardContent className="p-4">
-        <h3 className="text-sm font-medium mb-3">Potential Deduction Opportunities</h3>
-        
+      <CardHeader className="pb-2">
+        <CardTitle className="text-lg flex justify-between items-center">
+          <span>Potential Deduction Opportunities</span>
+          <Badge variant="outline" className="font-normal">
+            Federal: <AnimatedNumber 
+              value={federalTotal} 
+              formatter={(val) => formatCurrency(val)}
+              className="ml-1"
+            />
+            {includeStateTaxes && stateTotal > 0 && (
+              <span className="ml-2">
+                State: <AnimatedNumber 
+                  value={stateTotal} 
+                  formatter={(val) => formatCurrency(val)}
+                  className="ml-1"
+                />
+              </span>
+            )}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
         {/* Federal deductions */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Federal</h4>
           {eligibleDeductions.map((deduction) => (
             <div key={deduction.id} className="border-b border-border/40 pb-3 last:border-0 last:pb-0">
@@ -58,14 +90,16 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
                   {iconMap[deduction.icon] || <BadgeDollarSign className="h-5 w-5" />}
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-sm font-medium">{deduction.name}</h4>
+                  <div className="flex justify-between items-start">
+                    <h4 className="text-sm font-medium">{deduction.name}</h4>
+                    {deduction.eligibleAmount !== null && (
+                      <span className="text-sm font-medium text-primary">
+                        {formatCurrency(deduction.eligibleAmount)}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground mb-1">{deduction.description}</p>
                   <div className="text-xs">
-                    {deduction.eligibleAmount !== null && (
-                      <p className="font-medium text-primary">
-                        Up to {formatCurrency(deduction.eligibleAmount)}
-                      </p>
-                    )}
                     <p className="text-muted-foreground">{deduction.eligibilityMessage}</p>
                   </div>
                 </div>
@@ -79,7 +113,7 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
           <>
             <Separator className="my-4" />
             
-            <div className="space-y-4">
+            <div className="space-y-3">
               <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 {selectedState} State
               </h4>
@@ -91,14 +125,16 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
                       {iconMap[deduction.icon] || <BadgeDollarSign className="h-5 w-5" />}
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-sm font-medium">{deduction.name}</h4>
+                      <div className="flex justify-between items-start">
+                        <h4 className="text-sm font-medium">{deduction.name}</h4>
+                        {deduction.eligibleAmount !== null && (
+                          <span className="text-sm font-medium text-secondary">
+                            {formatCurrency(deduction.eligibleAmount)}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mb-1">{deduction.description}</p>
                       <div className="text-xs">
-                        {deduction.eligibleAmount !== null && (
-                          <p className="font-medium text-secondary">
-                            Up to {formatCurrency(deduction.eligibleAmount)}
-                          </p>
-                        )}
                         <p className="text-muted-foreground">{deduction.eligibilityMessage}</p>
                       </div>
                     </div>

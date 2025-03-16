@@ -96,5 +96,39 @@ export const getEligibleDeductions = (
     icon: 'hand-coins'
   });
   
+  // Mortgage Interest Deduction
+  deductions.push({
+    id: 'mortgageInterest',
+    name: 'Mortgage Interest',
+    description: 'Deduction for interest paid on home mortgages',
+    eligibleAmount: null,
+    eligibilityMessage: 'You can deduct mortgage interest on qualified home loans up to $750,000 when you itemize deductions.',
+    icon: 'home'
+  });
+  
+  // Child and Dependent Care Credit
+  if (filingStatus !== 'single' || income < 200000) {
+    deductions.push({
+      id: 'childDependentCare',
+      name: 'Child & Dependent Care Credit',
+      description: 'Credit for child or dependent care expenses',
+      eligibleAmount: 8000,
+      eligibilityMessage: 'Up to $8,000 for one qualifying person or $16,000 for two or more. Credit percentage varies based on income.',
+      icon: 'baby'
+    });
+  }
+  
+  // Education Credits
+  if (income < (filingStatus === 'married' ? 180000 : 90000)) {
+    deductions.push({
+      id: 'educationCredits',
+      name: 'Education Credits',
+      description: 'American Opportunity and Lifetime Learning credits',
+      eligibleAmount: 2500,
+      eligibilityMessage: 'The American Opportunity Credit provides up to $2,500 per eligible student, while the Lifetime Learning Credit offers up to $2,000 per tax return.',
+      icon: 'graduation-cap'
+    });
+  }
+  
   return deductions;
 };
