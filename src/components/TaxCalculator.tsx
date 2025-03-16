@@ -6,6 +6,7 @@ import IncomeInput from './IncomeInput';
 import DeductionsInput from './DeductionsInput';
 import ResultsDisplay from './ResultsDisplay';
 import DeductionsEligibility from './DeductionsEligibility';
+import StateTaxSettings from './StateTaxSettings';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
 import { getStateEligibleDeductions, calculateStateTaxes } from '@/utils/stateTaxCalculations';
@@ -107,9 +108,10 @@ const TaxCalculator: React.FC = () => {
                     onValueChange={setActiveTab}
                     className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
                       <TabsTrigger value="income">Income</TabsTrigger>
                       <TabsTrigger value="deductions">Deductions</TabsTrigger>
+                      <TabsTrigger value="state" disabled={!includeStateTaxes}>State</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="income" className="mt-0">
@@ -127,7 +129,13 @@ const TaxCalculator: React.FC = () => {
                           <Switch
                             id="state-taxes"
                             checked={includeStateTaxes}
-                            onCheckedChange={setIncludeStateTaxes}
+                            onCheckedChange={(checked) => {
+                              setIncludeStateTaxes(checked);
+                              // Auto-switch to state tab if enabling state taxes
+                              if (checked && activeTab !== 'state') {
+                                setActiveTab('state');
+                              }
+                            }}
                           />
                           <Label htmlFor="state-taxes" className="text-sm cursor-pointer">
                             Include State Taxes
@@ -163,6 +171,17 @@ const TaxCalculator: React.FC = () => {
                         filingStatus={filingStatus}
                         setDeductions={setDeductions}
                         setUseStandardDeduction={setUseStandardDeduction}
+                      />
+                    </TabsContent>
+                    
+                    <TabsContent value="state" className="mt-0">
+                      <StateTaxSettings 
+                        selectedState={selectedState}
+                        setSelectedState={setSelectedState}
+                        income={income}
+                        filingStatus={filingStatus}
+                        stateResults={stateResults}
+                        stateEligibleDeductions={stateEligibleDeductions}
                       />
                     </TabsContent>
                   </Tabs>
