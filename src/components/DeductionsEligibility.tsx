@@ -108,7 +108,7 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
           ))}
         </div>
         
-        {/* State deductions if enabled */}
+        {/* State deductions if enabled - only show in main component, not in the StateTaxSettings */}
         {includeStateTaxes && stateEligibleDeductions.length > 0 && (
           <>
             <Separator className="my-4" />

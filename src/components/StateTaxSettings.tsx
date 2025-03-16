@@ -119,43 +119,13 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
             </div>
           )}
           
-          <Separator className="my-4" />
-          
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium flex items-center">
-              <DollarSign className="w-4 h-4 mr-1 text-primary/70" />
-              {selectedState} Deduction Opportunities
-            </h4>
-            
-            {stateEligibleDeductions.length > 0 ? (
-              <div className="space-y-3">
-                {stateEligibleDeductions.map((deduction) => (
-                  <div key={deduction.id} className="border rounded-md p-3 border-border/50 bg-background/50">
-                    <h5 className="text-sm font-medium">{deduction.name}</h5>
-                    <p className="text-xs text-muted-foreground mt-1">{deduction.description}</p>
-                    {deduction.eligibleAmount !== null && (
-                      <p className="text-xs font-medium text-primary mt-1">
-                        Up to {formatCurrency(deduction.eligibleAmount)}
-                      </p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-1">{deduction.eligibilityMessage}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground italic">
-                No specific deductions available for {selectedState} in our database.
-              </p>
-            )}
+          <div className="pt-2 border-t border-border/30">
+            <p className="text-xs text-muted-foreground">
+              State tax information is for estimation purposes only. Consult with a tax professional for personalized advice.
+            </p>
           </div>
         </div>
       )}
-      
-      <div className="pt-2 border-t border-border/30">
-        <p className="text-xs text-muted-foreground">
-          State tax information is for estimation purposes only. Consult with a tax professional for personalized advice.
-        </p>
-      </div>
     </div>
   );
 };
