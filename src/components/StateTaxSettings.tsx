@@ -4,6 +4,7 @@ import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalcula
 import { DeductionInfo } from '@/utils/deductionEligibility';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { 
   GlobeIcon, 
   MapPinIcon, 
@@ -15,14 +16,16 @@ import {
   HeartPulse,
   Home,
   Baby,
-  CheckIcon 
+  CheckIcon,
+  InfoIcon
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 
 // List of US states for the dropdown
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 
-  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
+  'Delaware', 'District of Columbia', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
   'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 
   'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 
   'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 
@@ -35,6 +38,13 @@ const US_STATES = [
 const NO_INCOME_TAX_STATES = [
   'Alaska', 'Florida', 'Nevada', 'New Hampshire', 'South Dakota', 
   'Tennessee', 'Texas', 'Washington', 'Wyoming'
+];
+
+// States with flat tax rates
+const FLAT_TAX_STATES = [
+  'Arizona', 'Colorado', 'Idaho', 'Illinois', 'Indiana',
+  'Iowa', 'Kentucky', 'Massachusetts', 'Michigan', 'Mississippi',
+  'North Carolina', 'Pennsylvania', 'Utah'
 ];
 
 const TAX_TYPE_COLORS = {
@@ -61,12 +71,13 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
   stateEligibleDeductions
 }) => {
   const hasNoIncomeTax = NO_INCOME_TAX_STATES.includes(selectedState);
+  const hasFlatTax = FLAT_TAX_STATES.includes(selectedState);
   
   // Determine tax type based on the state
   let taxType = "Graduated"; // Default value
   if (hasNoIncomeTax) {
     taxType = "No Income Tax";
-  } else if (["Arizona", "Colorado", "Georgia", "Idaho", "Illinois", "Indiana", "Iowa", "Kentucky", "Massachusetts", "Michigan", "Mississippi"].includes(selectedState)) {
+  } else if (hasFlatTax) {
     taxType = "Flat";
   }
 
@@ -158,6 +169,38 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
                 label="Marginal Rate"
                 value={formatPercentage(stateResults.marginalRate)}
               />
+            </div>
+          )}
+          
+          {/* Display tax bracket breakdown for graduated tax states */}
+          {taxType === "Graduated" && stateResults && stateResults.bracketBreakdown.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center mb-2">
+                <InfoIcon className="w-4 h-4 mr-2 text-primary/70" />
+                <h4 className="text-sm font-medium">Tax Bracket Breakdown</h4>
+              </div>
+              <Card className="overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Bracket</TableHead>
+                      <TableHead>Rate</TableHead>
+                      <TableHead>Tax Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stateResults.bracketBreakdown.map((bracket, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? "∞" : formatCurrency(bracket.rangeEnd)}
+                        </TableCell>
+                        <TableCell>{formatPercentage(bracket.rate)}</TableCell>
+                        <TableCell>{formatCurrency(bracket.amount)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </Card>
             </div>
           )}
           
