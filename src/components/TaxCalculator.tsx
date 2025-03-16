@@ -4,7 +4,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import IncomeInput from './IncomeInput';
 import DeductionsInput from './DeductionsInput';
 import ResultsDisplay from './ResultsDisplay';
+import DeductionsEligibility from './DeductionsEligibility';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
+import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
 import { Card, CardContent } from '@/components/ui/card';
 
 const TaxCalculator: React.FC = () => {
@@ -18,6 +20,7 @@ const TaxCalculator: React.FC = () => {
   // Results state
   const [results, setResults] = useState<TaxResults | null>(null);
   const [activeTab, setActiveTab] = useState<string>('income');
+  const [eligibleDeductions, setEligibleDeductions] = useState<DeductionInfo[]>([]);
   
   // Calculate taxes whenever inputs change
   useEffect(() => {
@@ -30,6 +33,10 @@ const TaxCalculator: React.FC = () => {
     });
     
     setResults(result);
+    
+    // Calculate eligible deductions
+    const deductionsList = getEligibleDeductions(income, filingStatus);
+    setEligibleDeductions(deductionsList);
   }, [income, withholding, filingStatus, deductions, useStandardDeduction]);
 
   return (
@@ -73,7 +80,10 @@ const TaxCalculator: React.FC = () => {
         
         <div className="col-span-1 lg:col-span-2">
           {results && (
-            <ResultsDisplay results={results} />
+            <div className="space-y-6">
+              <ResultsDisplay results={results} />
+              <DeductionsEligibility eligibleDeductions={eligibleDeductions} />
+            </div>
           )}
         </div>
       </div>
