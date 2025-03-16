@@ -16,6 +16,7 @@ const Index = () => {
             </h1>
             <p className="text-muted-foreground max-w-xl text-balance animate-slide-down">
               Estimate your tax refund or amount owed based on your income, filing status, and deductions.
+              Now with support for uploading tax forms like W-2 and 1099s.
             </p>
           </div>
         </div>

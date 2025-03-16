@@ -7,9 +7,10 @@ import DeductionsInput from './DeductionsInput';
 import ResultsDisplay from './ResultsDisplay';
 import DeductionsEligibility from './DeductionsEligibility';
 import StateTaxSettings from './StateTaxSettings';
+import TaxFormUploader from './TaxFormUploader';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
-import { getStateEligibleDeductions, calculateStateTaxes } from '@/utils/stateTaxCalculations';
+import { calculateStateTax, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -20,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckIcon, GlobeIcon } from 'lucide-react';
+import { CheckIcon, GlobeIcon, Upload } from 'lucide-react';
 
 // List of US states for the dropdown
 const US_STATES = [
@@ -33,6 +34,10 @@ const US_STATES = [
   'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 
   'Wisconsin', 'Wyoming'
 ];
+
+// Create aliases for the stateTaxCalculations functions to match the imports in this file
+const calculateStateTaxes = calculateStateTax;
+const getStateEligibleDeductions = getStateDeductionInfo;
 
 const TaxCalculator: React.FC = () => {
   // Input state
@@ -51,6 +56,28 @@ const TaxCalculator: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('income');
   const [eligibleDeductions, setEligibleDeductions] = useState<DeductionInfo[]>([]);
   const [stateEligibleDeductions, setStateEligibleDeductions] = useState<DeductionInfo[]>([]);
+  
+  // Handle tax form data
+  const handleFormProcessed = (formData: {
+    income?: number;
+    federalWithholding?: number;
+    stateWithholding?: number;
+  }) => {
+    // Update income if provided
+    if (formData.income) {
+      setIncome(prevIncome => prevIncome + formData.income!);
+    }
+    
+    // Update federal withholding if provided
+    if (formData.federalWithholding) {
+      setFederalWithholding(prevWithholding => prevWithholding + formData.federalWithholding!);
+    }
+    
+    // Update state withholding if provided
+    if (formData.stateWithholding) {
+      setStateWithholding(prevWithholding => prevWithholding + formData.stateWithholding!);
+    }
+  };
   
   // Calculate taxes whenever inputs change
   useEffect(() => {
@@ -110,9 +137,13 @@ const TaxCalculator: React.FC = () => {
                     onValueChange={setActiveTab}
                     className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsList className="grid w-full grid-cols-4 mb-6">
                       <TabsTrigger value="income">Income</TabsTrigger>
                       <TabsTrigger value="deductions">Deductions</TabsTrigger>
+                      <TabsTrigger value="upload">
+                        <Upload className="h-4 w-4 mr-1" />
+                        Upload Forms
+                      </TabsTrigger>
                       <TabsTrigger value="state" disabled={!includeStateTaxes}>State</TabsTrigger>
                     </TabsList>
                     
@@ -177,6 +208,10 @@ const TaxCalculator: React.FC = () => {
                         setDeductions={setDeductions}
                         setUseStandardDeduction={setUseStandardDeduction}
                       />
+                    </TabsContent>
+                    
+                    <TabsContent value="upload" className="mt-0">
+                      <TaxFormUploader onFormProcessed={handleFormProcessed} />
                     </TabsContent>
                     
                     <TabsContent value="state" className="mt-0">
