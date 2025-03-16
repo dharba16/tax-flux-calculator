@@ -65,9 +65,9 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({
   }, [value, duration]);
   
   return (
-    <span className={cn("inline-block relative whitespace-nowrap", className)}>
+    <span className={cn("inline-block relative overflow-hidden", className)}>
       <span className={cn(
-        "transition-transform inline-flex justify-end w-full",
+        "inline-block transition-transform",
         isAnimating ? "animate-number-change" : "transform-none"
       )}>
         {prefix}{formatter(displayValue)}{suffix}

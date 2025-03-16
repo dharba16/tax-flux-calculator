@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalculations';
 import AnimatedNumber from './AnimatedNumber';
-import { ArrowDownIcon, ArrowUpIcon, DollarSignIcon, GlobeIcon, ReceiptIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, DollarSignIcon, GlobeIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -20,66 +20,38 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
   includeStateTaxes = false,
   selectedState = ''
 }) => {
-  const federalRefund = results.refundOrOwed;
-  const stateRefund = stateResults ? stateResults.refundOrOwed : 0;
-  const totalRefund = federalRefund + stateRefund;
+  const isRefund = results.refundOrOwed > 0;
   
-  const isFederalRefund = federalRefund > 0;
-  const isStateRefund = stateRefund > 0;
-  const isTotalRefund = totalRefund > 0;
+  // Calculate combined federal and state refund/owed if state taxes are included
+  const combinedRefundOrOwed = includeStateTaxes && stateResults 
+    ? results.refundOrOwed - stateResults.taxLiability 
+    : results.refundOrOwed;
+  
+  const isCombinedRefund = combinedRefundOrOwed > 0;
   
   return (
     <div className="animate-fade-in space-y-6">
       <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
         <CardContent className="p-6">
-          <div className="flex flex-col space-y-6">
-            {/* Total combined refund/owed */}
-            <div className="flex flex-col items-center justify-center text-center space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                Total Tax Result
-              </h3>
-              <div className={`flex items-center text-4xl md:text-5xl font-semibold ${isTotalRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
-                <span className="mr-1">{isTotalRefund ? '' : '-'}</span>
-                <AnimatedNumber 
-                  value={Math.abs(totalRefund)}
-                  formatter={(val) => formatCurrency(val)}
-                  duration={800}
-                  className="min-w-[200px] text-right"
-                />
-              </div>
-              <div className="flex items-center text-sm text-muted-foreground">
-                {isTotalRefund ? (
-                  <ArrowDownIcon className="w-4 h-4 mr-1 text-emerald-500" />
-                ) : (
-                  <ArrowUpIcon className="w-4 h-4 mr-1 text-rose-500" />
-                )}
-                <span>{isTotalRefund ? "Total Refund" : "Total Amount Due"}</span>
-              </div>
-            </div>
-            
-            {/* Individual refund breakdown */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Federal refund card */}
-              <DetailCard
-                label="Federal Tax"
-                value={federalRefund}
-                formatter={(value) => formatCurrency(Math.abs(value))}
-                isRefund={isFederalRefund}
-                icon={<DollarSignIcon className="w-4 h-4" />}
-                showSign={true}
+          <div className="flex flex-col items-center justify-center text-center space-y-2">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+              {includeStateTaxes ? "Total Tax Result" : isRefund ? "Your Tax Refund" : "You Owe"}
+            </h3>
+            <div className={`flex items-center text-4xl md:text-5xl font-semibold ${isCombinedRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <AnimatedNumber 
+                value={Math.abs(combinedRefundOrOwed)}
+                formatter={(val) => formatCurrency(val)}
+                duration={800}
               />
-              
-              {/* State refund card (if state taxes included) */}
-              {includeStateTaxes && (
-                <DetailCard
-                  label={`${selectedState} State Tax`}
-                  value={stateRefund}
-                  formatter={(value) => formatCurrency(Math.abs(value))}
-                  isRefund={isStateRefund}
-                  icon={<GlobeIcon className="w-4 h-4" />}
-                  showSign={true}
-                />
+            </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              {isCombinedRefund ? (
+                <ArrowDownIcon className="w-4 h-4 mr-1 text-emerald-500" />
+              ) : (
+                <ArrowUpIcon className="w-4 h-4 mr-1 text-rose-500" />
               )}
+              <span>{isCombinedRefund ? "Refund" : "Amount Due"}</span>
+              {includeStateTaxes && <span className="ml-1">(Federal + State)</span>}
             </div>
           </div>
         </CardContent>
@@ -120,49 +92,20 @@ interface DetailCardProps {
   value: number;
   formatter: (value: number) => string;
   isState?: boolean;
-  isRefund?: boolean;
-  icon?: React.ReactNode;
-  showSign?: boolean;
 }
 
-const DetailCard: React.FC<DetailCardProps> = ({ 
-  label, 
-  value, 
-  formatter, 
-  isState = false,
-  isRefund = false,
-  icon = null,
-  showSign = false
-}) => {
+const DetailCard: React.FC<DetailCardProps> = ({ label, value, formatter, isState = false }) => {
   return (
     <Card className={`overflow-hidden border border-border/50 ${isState ? 'bg-secondary/5' : 'bg-card/50'} backdrop-blur-sm`}>
       <CardContent className="p-4">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            {icon}
-            <p className="text-sm text-muted-foreground">{label}</p>
-          </div>
-          <div className={`text-xl font-medium ${isRefund ? 'text-emerald-500' : 'text-rose-500'} min-w-[150px] text-right`}>
-            {showSign && <span>{isRefund ? '+' : '-'} </span>}
+        <div className="flex flex-col">
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <div className={`text-xl font-medium mt-1 ${isState ? 'text-secondary-foreground' : ''}`}>
             <AnimatedNumber 
-              value={Math.abs(value)}
+              value={value}
               formatter={formatter}
-              className="w-full inline-flex justify-end"
             />
           </div>
-        </div>
-        <div className="text-xs text-muted-foreground mt-1 flex items-center">
-          {isRefund ? (
-            <>
-              <ArrowDownIcon className="w-3 h-3 mr-1 text-emerald-500" />
-              <span>Refund</span>
-            </>
-          ) : (
-            <>
-              <ArrowUpIcon className="w-3 h-3 mr-1 text-rose-500" />
-              <span>Amount Due</span>
-            </>
-          )}
         </div>
       </CardContent>
     </Card>
@@ -243,13 +186,13 @@ const FederalTaxDetails: React.FC<FederalTaxDetailsProps> = ({ results }) => {
                     <span className="mr-2 text-muted-foreground">
                       {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
                     </span>
-                    <span className="font-medium min-w-[100px] text-right">{formatCurrency(bracket.amount)}</span>
+                    <span className="font-medium">{formatCurrency(bracket.amount)}</span>
                   </div>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
                 <span>Total Federal Tax</span>
-                <span className="min-w-[100px] text-right">{formatCurrency(results.taxLiability)}</span>
+                <span>{formatCurrency(results.taxLiability)}</span>
               </div>
             </div>
           </CardContent>
@@ -343,13 +286,13 @@ const StateTaxDetails: React.FC<StateTaxDetailsProps> = ({ stateResults, selecte
                           <span className="mr-2 text-muted-foreground">
                             {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
                           </span>
-                          <span className="font-medium min-w-[100px] text-right">{formatCurrency(bracket.amount)}</span>
+                          <span className="font-medium">{formatCurrency(bracket.amount)}</span>
                         </div>
                       </div>
                     ))}
                     <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
                       <span>Total {selectedState} State Tax</span>
-                      <span className="min-w-[100px] text-right">{formatCurrency(stateResults.taxLiability)}</span>
+                      <span>{formatCurrency(stateResults.taxLiability)}</span>
                     </div>
                   </div>
                 </CardContent>
