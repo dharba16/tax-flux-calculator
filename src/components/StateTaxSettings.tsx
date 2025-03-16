@@ -4,7 +4,19 @@ import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalcula
 import { DeductionInfo } from '@/utils/deductionEligibility';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { GlobeIcon, MapPinIcon, ReceiptIcon, PercentIcon, DollarSign, BadgeDollarSign } from 'lucide-react';
+import { 
+  GlobeIcon, 
+  MapPinIcon, 
+  ReceiptIcon, 
+  PercentIcon, 
+  DollarSign, 
+  BadgeDollarSign,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Baby,
+  CheckIcon 
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 // List of US states for the dropdown
@@ -25,6 +37,12 @@ const NO_INCOME_TAX_STATES = [
   'Tennessee', 'Texas', 'Washington', 'Wyoming'
 ];
 
+const TAX_TYPE_COLORS = {
+  'Graduated': 'amber',
+  'Flat': 'green',
+  'No Income Tax': 'blue'
+};
+
 interface StateTaxSettingsProps {
   selectedState: string;
   setSelectedState: (state: string) => void;
@@ -43,6 +61,14 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
   stateEligibleDeductions
 }) => {
   const hasNoIncomeTax = NO_INCOME_TAX_STATES.includes(selectedState);
+  
+  // Determine tax type based on the state
+  let taxType = "Graduated"; // Default value
+  if (hasNoIncomeTax) {
+    taxType = "No Income Tax";
+  } else if (["Arizona", "Colorado", "Georgia", "Idaho", "Illinois", "Indiana", "Iowa", "Kentucky", "Massachusetts", "Michigan", "Mississippi"].includes(selectedState)) {
+    taxType = "Flat";
+  }
 
   return (
     <div className="space-y-6">
@@ -76,16 +102,32 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
             </Select>
           </div>
         </div>
+        
+        {/* Display tax type banner */}
+        <Card className={`border border-${TAX_TYPE_COLORS[taxType]}-200/30 bg-${TAX_TYPE_COLORS[taxType]}-50/30 dark:bg-${TAX_TYPE_COLORS[taxType]}-900/10`}>
+          <CardContent className="p-3">
+            <div className="flex items-center space-x-2">
+              <span className={`text-${TAX_TYPE_COLORS[taxType]}-600 dark:text-${TAX_TYPE_COLORS[taxType]}-400 font-medium`}>
+                {taxType} Tax Structure
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {taxType === "Graduated" && "Tax rates increase as income increases through multiple brackets."}
+              {taxType === "Flat" && "A single tax rate applies to all taxable income."}
+              {taxType === "No Income Tax" && `${selectedState} does not collect personal income tax from residents.`}
+            </p>
+          </CardContent>
+        </Card>
       </div>
       
       {hasNoIncomeTax ? (
-        <Card className="border border-amber-200/30 bg-amber-50/30 dark:bg-amber-900/10">
+        <Card className="border border-blue-200/30 bg-blue-50/30 dark:bg-blue-900/10">
           <CardContent className="p-4">
             <div className="flex items-start space-x-3">
-              <DollarSign className="w-5 h-5 text-amber-500 mt-0.5" />
+              <DollarSign className="w-5 h-5 text-blue-500 mt-0.5" />
               <div>
-                <h4 className="font-medium text-amber-800 dark:text-amber-400">No State Income Tax</h4>
-                <p className="text-sm text-amber-700/70 dark:text-amber-300/70 mt-1">
+                <h4 className="font-medium text-blue-800 dark:text-blue-400">No State Income Tax</h4>
+                <p className="text-sm text-blue-700/70 dark:text-blue-300/70 mt-1">
                   {selectedState} does not collect personal income tax from residents.
                 </p>
               </div>
@@ -133,11 +175,11 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
                     <CardContent className="p-3">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center">
-                          {deduction.icon === 'graduation-cap' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
-                          {deduction.icon === 'heart-pulse' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
-                          {deduction.icon === 'home' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
-                          {deduction.icon === 'baby' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
-                          {deduction.icon === 'check' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'graduation-cap' && <GraduationCap className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'heart-pulse' && <HeartPulse className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'home' && <Home className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'baby' && <Baby className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'check' && <CheckIcon className="w-4 h-4 mr-2 text-primary/70" />}
                           <h5 className="text-sm font-medium">{deduction.name}</h5>
                         </div>
                         {deduction.eligibleAmount !== null && (
