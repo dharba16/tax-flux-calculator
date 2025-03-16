@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -11,8 +12,26 @@ import { getStateEligibleDeductions, calculateStateTaxes } from '@/utils/stateTa
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { Toggle } from '@/components/ui/toggle';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { CheckIcon, GlobeIcon } from 'lucide-react';
+
+// List of US states for the dropdown
+const US_STATES = [
+  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 
+  'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 
+  'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 
+  'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 
+  'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio', 
+  'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota', 
+  'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia', 
+  'Wisconsin', 'Wyoming'
+];
 
 const TaxCalculator: React.FC = () => {
   // Input state
@@ -116,15 +135,21 @@ const TaxCalculator: React.FC = () => {
                         
                         {includeStateTaxes && (
                           <div className="flex-1 max-w-[180px] ml-4">
-                            <Toggle
-                              variant="outline"
-                              aria-label="Select State"
-                              className="w-full justify-between"
-                              pressed={true}
+                            <Select
+                              value={selectedState}
+                              onValueChange={setSelectedState}
                             >
-                              <span className="flex-1 text-left">{selectedState}</span>
-                              <GlobeIcon className="ml-2 h-4 w-4" />
-                            </Toggle>
+                              <SelectTrigger className="w-full h-9">
+                                <SelectValue placeholder="Select State" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {US_STATES.map((state) => (
+                                  <SelectItem key={state} value={state}>
+                                    {state}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                         )}
                       </div>
