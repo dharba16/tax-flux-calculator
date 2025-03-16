@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -57,11 +56,18 @@ const TaxCalculator: React.FC = () => {
         useStandardDeduction,
         state: selectedState
       });
-      setStateResults(stateResult);
+      
+      // Only set state results if we got a valid result
+      if (stateResult) {
+        setStateResults(stateResult as TaxResults);
 
-      // Get state-specific deductions
-      const stateDeductionsList = getStateEligibleDeductions(income, filingStatus, selectedState);
-      setStateEligibleDeductions(stateDeductionsList);
+        // Get state-specific deductions
+        const stateDeductionsList = getStateEligibleDeductions(income, filingStatus, selectedState);
+        setStateEligibleDeductions(stateDeductionsList);
+      } else {
+        setStateResults(null);
+        setStateEligibleDeductions([]);
+      }
     } else {
       setStateResults(null);
       setStateEligibleDeductions([]);

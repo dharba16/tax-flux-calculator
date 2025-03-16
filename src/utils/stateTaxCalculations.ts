@@ -16,6 +16,7 @@ export interface StateTaxResults {
   effectiveTaxRate: number;
   marginalRate: number;
   deductionAmount: number;
+  refundOrOwed: number; // Added this property to match TaxResults interface
   bracketBreakdown: Array<{
     rate: number;
     amount: number;
@@ -123,12 +124,16 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
   // Calculate effective tax rate
   const effectiveTaxRate = taxableIncome > 0 ? taxLiability / taxableIncome : 0;
   
+  // Set refundOrOwed to negative tax liability (since we don't have withholding for state taxes)
+  const refundOrOwed = -taxLiability; // State taxes are always owed (negative refund)
+  
   return {
     taxableIncome,
     taxLiability,
     effectiveTaxRate,
     marginalRate: lastBracketUsed.rate,
     deductionAmount,
+    refundOrOwed,
     bracketBreakdown
   };
 }
