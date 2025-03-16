@@ -16,7 +16,7 @@ export interface StateTaxResults {
   effectiveTaxRate: number;
   marginalRate: number;
   deductionAmount: number;
-  refundOrOwed: number; // Added this property to match TaxResults interface
+  refundOrOwed: number;
   bracketBreakdown: Array<{
     rate: number;
     amount: number;
@@ -62,6 +62,54 @@ const STATE_TAX_BRACKETS = {
       { min: 921096, max: Infinity, rate: 0.123 },
     ],
   },
+  // New York State Tax Brackets
+  "New York": {
+    single: [
+      { min: 0, max: 8500, rate: 0.04 },
+      { min: 8501, max: 11700, rate: 0.045 },
+      { min: 11701, max: 13900, rate: 0.0525 },
+      { min: 13901, max: 80650, rate: 0.055 },
+      { min: 80651, max: 215400, rate: 0.06 },
+      { min: 215401, max: 1077550, rate: 0.0685 },
+      { min: 1077551, max: Infinity, rate: 0.0882 },
+    ],
+    married: [
+      { min: 0, max: 17150, rate: 0.04 },
+      { min: 17151, max: 23600, rate: 0.045 },
+      { min: 23601, max: 27900, rate: 0.0525 },
+      { min: 27901, max: 161550, rate: 0.055 },
+      { min: 161551, max: 323200, rate: 0.06 },
+      { min: 323201, max: 2155350, rate: 0.0685 },
+      { min: 2155351, max: Infinity, rate: 0.0882 },
+    ],
+    headOfHousehold: [
+      { min: 0, max: 12800, rate: 0.04 },
+      { min: 12801, max: 17650, rate: 0.045 },
+      { min: 17651, max: 20900, rate: 0.0525 },
+      { min: 20901, max: 107650, rate: 0.055 },
+      { min: 107651, max: 269300, rate: 0.06 },
+      { min: 269301, max: 1616450, rate: 0.0685 },
+      { min: 1616451, max: Infinity, rate: 0.0882 },
+    ],
+  },
+  // Texas has no state income tax
+  "Texas": {
+    single: [{ min: 0, max: Infinity, rate: 0 }],
+    married: [{ min: 0, max: Infinity, rate: 0 }],
+    headOfHousehold: [{ min: 0, max: Infinity, rate: 0 }],
+  },
+  // Florida has no state income tax
+  "Florida": {
+    single: [{ min: 0, max: Infinity, rate: 0 }],
+    married: [{ min: 0, max: Infinity, rate: 0 }],
+    headOfHousehold: [{ min: 0, max: Infinity, rate: 0 }],
+  },
+  // Washington has no state income tax
+  "Washington": {
+    single: [{ min: 0, max: Infinity, rate: 0 }],
+    married: [{ min: 0, max: Infinity, rate: 0 }],
+    headOfHousehold: [{ min: 0, max: Infinity, rate: 0 }],
+  }
 };
 
 const STATE_STANDARD_DEDUCTION = {
@@ -70,6 +118,26 @@ const STATE_STANDARD_DEDUCTION = {
     married: 10404,
     headOfHousehold: 10404,
   },
+  "New York": {
+    single: 8000,
+    married: 16050,
+    headOfHousehold: 11200,
+  },
+  "Texas": {
+    single: 0,
+    married: 0,
+    headOfHousehold: 0,
+  },
+  "Florida": {
+    single: 0,
+    married: 0,
+    headOfHousehold: 0,
+  },
+  "Washington": {
+    single: 0,
+    married: 0,
+    headOfHousehold: 0,
+  }
 };
 
 /**
@@ -78,14 +146,28 @@ const STATE_STANDARD_DEDUCTION = {
 export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | null {
   const { income, filingStatus, deductions, useStandardDeduction, state } = inputs;
   
-  // Only support California for now
-  if (state !== 'California' || !STATE_TAX_BRACKETS[state]) {
-    return null;
+  // Check if we have tax data for this state
+  if (!STATE_TAX_BRACKETS[state]) {
+    return {
+      taxableIncome: income,
+      taxLiability: 0,
+      effectiveTaxRate: 0,
+      marginalRate: 0,
+      deductionAmount: 0,
+      refundOrOwed: 0,
+      bracketBreakdown: [{
+        rate: 0,
+        amount: 0,
+        rangeStart: 0,
+        rangeEnd: Infinity
+      }]
+    };
   }
   
   // Calculate deduction amount
+  const standardDeduction = STATE_STANDARD_DEDUCTION[state]?.[filingStatus] || 0;
   const deductionAmount = useStandardDeduction 
-    ? STATE_STANDARD_DEDUCTION[state][filingStatus] 
+    ? standardDeduction
     : deductions;
 
   // Calculate taxable income
@@ -149,7 +231,7 @@ export function getStateEligibleDeductions(
   const deductions: DeductionInfo[] = [];
   
   // California-specific deductions
-  if (state === 'California') {
+  if (state === "California") {
     // CA SDI (State Disability Insurance)
     deductions.push({
       id: 'ca_sdi',
@@ -192,6 +274,40 @@ export function getStateEligibleDeductions(
       icon: 'graduation-cap'
     });
   }
+  // New York-specific deductions
+  else if (state === "New York") {
+    // NY College Tuition Credit/Deduction
+    deductions.push({
+      id: 'ny_tuition_credit',
+      name: 'NY College Tuition Credit',
+      description: 'New York credit for college tuition expenses',
+      eligibleAmount: 400,
+      eligibilityMessage: 'You may qualify for up to $400 per student for tuition expenses at qualified institutions.',
+      icon: 'graduation-cap'
+    });
+    
+    // NY Long-Term Care Insurance Credit
+    deductions.push({
+      id: 'ny_ltc_credit',
+      name: 'NY Long-Term Care Insurance Credit',
+      description: 'Credit for long-term care insurance premiums',
+      eligibleAmount: null,
+      eligibilityMessage: 'You may qualify for a credit of 20% of premiums paid for long-term care insurance.',
+      icon: 'heart-pulse'
+    });
+  }
+  // For no-income tax states, explain that there are no deductions
+  else if (["Texas", "Florida", "Washington"].includes(state)) {
+    deductions.push({
+      id: 'no_income_tax',
+      name: 'No State Income Tax',
+      description: `${state} does not have state income tax`,
+      eligibleAmount: 0,
+      eligibilityMessage: `${state} does not impose a state income tax, so no state tax deductions apply.`,
+      icon: 'check'
+    });
+  }
   
   return deductions;
 }
+

@@ -52,6 +52,7 @@ const TaxCalculator: React.FC = () => {
   
   // Calculate taxes whenever inputs change
   useEffect(() => {
+    // Calculate federal taxes
     const result = calculateTaxes({
       income,
       withholding,
@@ -62,7 +63,7 @@ const TaxCalculator: React.FC = () => {
     
     setResults(result);
     
-    // Calculate eligible deductions
+    // Calculate eligible federal deductions
     const deductionsList = getEligibleDeductions(income, filingStatus);
     setEligibleDeductions(deductionsList);
 
@@ -78,7 +79,7 @@ const TaxCalculator: React.FC = () => {
       
       // Only set state results if we got a valid result
       if (stateResult) {
-        setStateResults(stateResult as TaxResults);
+        setStateResults(stateResult);
 
         // Get state-specific deductions
         const stateDeductionsList = getStateEligibleDeductions(income, filingStatus, selectedState);
