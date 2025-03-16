@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { FilingStatus } from '@/utils/taxCalculations';
 import { Separator } from '@/components/ui/separator';
+import { DollarSignIcon, GlobeIcon } from 'lucide-react';
 
 interface IncomeInputProps {
   income: number;
@@ -83,8 +84,9 @@ const IncomeInput: React.FC<IncomeInputProps> = ({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="federal-withholding" className="text-sm font-medium flex items-center">
+                <DollarSignIcon className="h-4 w-4 mr-2 text-blue-500" />
                 <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300 py-0.5 px-2 rounded mr-2">Federal</span>
-                Federal Withholding
+                Federal Tax Withheld (Box 2 on W-2)
               </Label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -105,8 +107,9 @@ const IncomeInput: React.FC<IncomeInputProps> = ({
             {includeStateTaxes && (
               <div className="space-y-2">
                 <Label htmlFor="state-withholding" className="text-sm font-medium flex items-center">
+                  <GlobeIcon className="h-4 w-4 mr-2 text-green-500" />
                   <span className="text-xs bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 py-0.5 px-2 rounded mr-2">State</span>
-                  State Withholding
+                  State Tax Withheld (Box 17 on W-2)
                 </Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
