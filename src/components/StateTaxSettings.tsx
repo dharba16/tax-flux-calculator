@@ -4,7 +4,7 @@ import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalcula
 import { DeductionInfo } from '@/utils/deductionEligibility';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { GlobeIcon, MapPinIcon, ReceiptIcon, PercentIcon, DollarSign } from 'lucide-react';
+import { GlobeIcon, MapPinIcon, ReceiptIcon, PercentIcon, DollarSign, BadgeDollarSign } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 // List of US states for the dropdown
@@ -116,6 +116,42 @@ const StateTaxSettings: React.FC<StateTaxSettingsProps> = ({
                 label="Marginal Rate"
                 value={formatPercentage(stateResults.marginalRate)}
               />
+            </div>
+          )}
+          
+          {/* Show state deduction opportunities in the state tab */}
+          {stateEligibleDeductions.length > 0 && (
+            <div className="space-y-4 mt-6">
+              <div className="flex items-center">
+                <BadgeDollarSign className="w-4 h-4 mr-2 text-primary" />
+                <h4 className="text-sm font-medium">{selectedState} Deduction Opportunities</h4>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {stateEligibleDeductions.map((deduction) => (
+                  <Card key={deduction.id} className="border border-border/50 bg-card/80">
+                    <CardContent className="p-3">
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center">
+                          {deduction.icon === 'graduation-cap' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'heart-pulse' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'home' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'baby' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
+                          {deduction.icon === 'check' && <ReceiptIcon className="w-4 h-4 mr-2 text-primary/70" />}
+                          <h5 className="text-sm font-medium">{deduction.name}</h5>
+                        </div>
+                        {deduction.eligibleAmount !== null && (
+                          <span className="text-sm font-medium text-primary">
+                            {formatCurrency(deduction.eligibleAmount)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{deduction.description}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{deduction.eligibilityMessage}</p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
           

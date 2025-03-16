@@ -108,42 +108,7 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
           ))}
         </div>
         
-        {/* State deductions if enabled - only show in main component, not in the StateTaxSettings */}
-        {includeStateTaxes && stateEligibleDeductions.length > 0 && (
-          <>
-            <Separator className="my-4" />
-            
-            <div className="space-y-3">
-              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {selectedState} State
-              </h4>
-              
-              {stateEligibleDeductions.map((deduction) => (
-                <div key={deduction.id} className="border-b border-border/40 pb-3 last:border-0 last:pb-0">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 h-10 w-10 bg-secondary/10 rounded-full flex items-center justify-center text-secondary">
-                      {iconMap[deduction.icon] || <BadgeDollarSign className="h-5 w-5" />}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <h4 className="text-sm font-medium">{deduction.name}</h4>
-                        {deduction.eligibleAmount !== null && (
-                          <span className="text-sm font-medium text-secondary">
-                            {formatCurrency(deduction.eligibleAmount)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground mb-1">{deduction.description}</p>
-                      <div className="text-xs">
-                        <p className="text-muted-foreground">{deduction.eligibilityMessage}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+        {/* Do not show state deductions here, as they will be shown in the state tax tab */}
         
         <div className="mt-4 pt-3 border-t border-border/40">
           <p className="text-xs text-muted-foreground">
