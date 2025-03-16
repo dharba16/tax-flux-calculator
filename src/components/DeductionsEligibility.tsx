@@ -10,11 +10,18 @@ import {
   HeartPulse, 
   HandCoins,
   BadgeDollarSign,
-  Receipt
+  Receipt,
+  Home,
+  Baby,
+  Globe
 } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 
 interface DeductionsEligibilityProps {
   eligibleDeductions: DeductionInfo[];
+  stateEligibleDeductions?: DeductionInfo[];
+  includeStateTaxes?: boolean;
+  selectedState?: string;
 }
 
 const iconMap: Record<string, React.ReactNode> = {
@@ -24,15 +31,26 @@ const iconMap: Record<string, React.ReactNode> = {
   'heart-pulse': <HeartPulse className="h-5 w-5" />,
   'hand-coins': <HandCoins className="h-5 w-5" />,
   'badge-dollar-sign': <BadgeDollarSign className="h-5 w-5" />,
-  'receipt': <Receipt className="h-5 w-5" />
+  'receipt': <Receipt className="h-5 w-5" />,
+  'home': <Home className="h-5 w-5" />,
+  'baby': <Baby className="h-5 w-5" />,
+  'globe': <Globe className="h-5 w-5" />
 };
 
-const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({ eligibleDeductions }) => {
+const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({ 
+  eligibleDeductions, 
+  stateEligibleDeductions = [],
+  includeStateTaxes = false,
+  selectedState = ''
+}) => {
   return (
     <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
       <CardContent className="p-4">
         <h3 className="text-sm font-medium mb-3">Potential Deduction Opportunities</h3>
+        
+        {/* Federal deductions */}
         <div className="space-y-4">
+          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Federal</h4>
           {eligibleDeductions.map((deduction) => (
             <div key={deduction.id} className="border-b border-border/40 pb-3 last:border-0 last:pb-0">
               <div className="flex items-start gap-3">
@@ -55,6 +73,42 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({ eligibleD
             </div>
           ))}
         </div>
+        
+        {/* State deductions if enabled */}
+        {includeStateTaxes && stateEligibleDeductions.length > 0 && (
+          <>
+            <Separator className="my-4" />
+            
+            <div className="space-y-4">
+              <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {selectedState} State
+              </h4>
+              
+              {stateEligibleDeductions.map((deduction) => (
+                <div key={deduction.id} className="border-b border-border/40 pb-3 last:border-0 last:pb-0">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 h-10 w-10 bg-secondary/10 rounded-full flex items-center justify-center text-secondary">
+                      {iconMap[deduction.icon] || <BadgeDollarSign className="h-5 w-5" />}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium">{deduction.name}</h4>
+                      <p className="text-xs text-muted-foreground mb-1">{deduction.description}</p>
+                      <div className="text-xs">
+                        {deduction.eligibleAmount !== null && (
+                          <p className="font-medium text-secondary">
+                            Up to {formatCurrency(deduction.eligibleAmount)}
+                          </p>
+                        )}
+                        <p className="text-muted-foreground">{deduction.eligibilityMessage}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        
         <div className="mt-4 pt-3 border-t border-border/40">
           <p className="text-xs text-muted-foreground">
             These are potential deductions you may be eligible for. Consult with a tax professional for personalized advice.
