@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Home, Calculator } from 'lucide-react';
+import { Home, Calculator, LogIn } from 'lucide-react';
 import { 
   NavigationMenu,
   NavigationMenuContent,
@@ -11,8 +11,18 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import AuthSection from '@/components/AuthSection';
 import { authService } from '@/services/authService';
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface NavigationProps {
   hideAuth?: boolean;
@@ -20,22 +30,19 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ hideAuth = false }) => {
   const [user, setUser] = React.useState(authService.getCurrentUser());
+  const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [isLoginDialogOpen, setIsLoginDialogOpen] = React.useState(false);
 
-  const handleLogin = (email: string, password: string) => {
+  const handleLogin = () => {
     try {
       const loggedInUser = authService.login(email, password);
       setUser(loggedInUser);
+      setIsLoginDialogOpen(false);
+      setEmail('');
+      setPassword('');
     } catch (error) {
       console.error('Login failed:', error);
-    }
-  };
-
-  const handleSignup = (email: string, password: string, name: string) => {
-    try {
-      const newUser = authService.signup(email, password, name);
-      setUser(newUser);
-    } catch (error) {
-      console.error('Signup failed:', error);
     }
   };
 
@@ -46,16 +53,64 @@ const Navigation: React.FC<NavigationProps> = ({ hideAuth = false }) => {
 
   return (
     <div className="flex flex-col items-end">
-      {!hideAuth && (
-        <div className="mb-2">
-          <AuthSection 
-            user={user} 
-            onLogin={handleLogin} 
-            onSignup={handleSignup} 
-            onLogout={handleLogout}
-          />
-        </div>
-      )}
+      <div className="mb-2">
+        {!hideAuth && (
+          <>
+            {user ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Welcome, {user.name}</span>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
+            ) : (
+              <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Login
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Login</DialogTitle>
+                    <DialogDescription>
+                      Enter your credentials to access your account.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4 py-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input 
+                        id="password" 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      onClick={handleLogin}
+                    >
+                      Login
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </>
+        )}
+      </div>
       <NavigationMenu className="max-w-none w-full justify-end">
         <NavigationMenuList>
           <NavigationMenuItem>

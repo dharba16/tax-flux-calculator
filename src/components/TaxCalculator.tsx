@@ -8,7 +8,6 @@ import DeductionsEligibility from './DeductionsEligibility';
 import StateTaxSettings from './StateTaxSettings';
 import TaxFormUploader from './TaxFormUploader';
 import ScenarioCompare from './ScenarioCompare';
-import AuthSection from './AuthSection';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
 import { calculateStateTax, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
@@ -232,15 +231,6 @@ const TaxCalculator: React.FC = () => {
                   </TabsTrigger>
                   <TabsTrigger value="state" disabled={!includeStateTaxes}>State</TabsTrigger>
                 </TabsList>
-                
-                <div className="flex justify-end mt-4">
-                  <AuthSection 
-                    user={user} 
-                    onLogin={handleLogin} 
-                    onSignup={handleSignup} 
-                    onLogout={handleLogout} 
-                  />
-                </div>
                 
                 <TabsContent value="income" className="mt-4">
                   <IncomeInput
