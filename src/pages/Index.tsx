@@ -5,9 +5,16 @@ import TaxCalculator from '@/components/TaxCalculator';
 const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="py-8 border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="py-6 border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container max-w-6xl">
-          <div className="flex flex-col items-center space-y-2 text-center">
+          <div className="flex flex-col items-center space-y-4 text-center">
+            <div className="flex items-center mb-2">
+              <img 
+                src="/lovable-uploads/919bde2f-178b-47a9-9824-0a1c48c18ca9.png" 
+                alt="The Alchemist's Solutions Logo" 
+                className="h-16 md:h-20"
+              />
+            </div>
             <div className="inline-flex items-center justify-center px-3 py-1 bg-primary/10 rounded-full text-xs font-medium text-primary animate-fade-in">
               2023 Tax Calculator
             </div>
@@ -31,10 +38,20 @@ const Index = () => {
       
       <footer className="py-6 border-t border-border/40 bg-background/80 backdrop-blur-sm">
         <div className="container max-w-6xl">
-          <p className="text-center text-sm text-muted-foreground">
-            This calculator provides estimates for educational purposes only and should not be used for filing taxes.
-            Consult a tax professional for advice specific to your situation.
-          </p>
+          <div className="flex flex-col items-center space-y-2">
+            <img 
+              src="/lovable-uploads/919bde2f-178b-47a9-9824-0a1c48c18ca9.png" 
+              alt="The Alchemist's Solutions Logo" 
+              className="h-10 mb-2"
+            />
+            <p className="text-center text-sm text-muted-foreground">
+              © {new Date().getFullYear()} The Alchemist's Solutions. All rights reserved.
+            </p>
+            <p className="text-center text-xs text-muted-foreground">
+              This calculator provides estimates for educational purposes only and should not be used for filing taxes.
+              Consult a tax professional for advice specific to your situation.
+            </p>
+          </div>
         </div>
       </footer>
     </div>
