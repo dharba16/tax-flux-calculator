@@ -14,7 +14,11 @@ import {
 import AuthSection from '@/components/AuthSection';
 import { authService } from '@/services/authService';
 
-const Navigation = () => {
+interface NavigationProps {
+  hideAuth?: boolean;
+}
+
+const Navigation: React.FC<NavigationProps> = ({ hideAuth = false }) => {
   const [user, setUser] = React.useState(authService.getCurrentUser());
 
   const handleLogin = (email: string, password: string) => {
@@ -42,14 +46,16 @@ const Navigation = () => {
 
   return (
     <div className="flex flex-col items-end">
-      <div className="mb-2">
-        <AuthSection 
-          user={user} 
-          onLogin={handleLogin} 
-          onSignup={handleSignup} 
-          onLogout={handleLogout}
-        />
-      </div>
+      {!hideAuth && (
+        <div className="mb-2">
+          <AuthSection 
+            user={user} 
+            onLogin={handleLogin} 
+            onSignup={handleSignup} 
+            onLogout={handleLogout}
+          />
+        </div>
+      )}
       <NavigationMenu className="max-w-none w-full justify-end">
         <NavigationMenuList>
           <NavigationMenuItem>

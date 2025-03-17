@@ -16,7 +16,7 @@ const TaxCalculatorPage = () => {
                 className="h-20"
               />
             </div>
-            <Navigation />
+            <Navigation hideAuth={true} />
           </div>
         </div>
       </header>
