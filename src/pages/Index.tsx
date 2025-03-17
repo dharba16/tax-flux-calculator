@@ -17,7 +17,7 @@ const Index = () => {
             <p className="text-muted-foreground max-w-xl text-balance animate-slide-down">
               Estimate your tax refund or amount owed based on your income, filing status, and deductions.
               Now with support for all major filing statuses including Qualifying Surviving Spouse and Married Filing Separately.
-              Upload tax forms (W-2, 1099s, 1098s, 1095s) to automatically populate your data.
+              Upload tax forms (W-2, 1099s, 1098s, 1095s) to automatically populate your data or compare multiple tax scenarios.
             </p>
           </div>
         </div>

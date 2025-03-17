@@ -8,6 +8,8 @@ import ResultsDisplay from './ResultsDisplay';
 import DeductionsEligibility from './DeductionsEligibility';
 import StateTaxSettings from './StateTaxSettings';
 import TaxFormUploader from './TaxFormUploader';
+import ScenarioCompare from './ScenarioCompare';
+import AuthSection from './AuthSection';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
 import { calculateStateTax, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
@@ -21,7 +23,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckIcon, GlobeIcon, Upload } from 'lucide-react';
+import { CheckIcon, GlobeIcon, Upload, Columns } from 'lucide-react';
+import { authService, User } from '@/services/authService';
+import { profileService } from '@/services/profileService';
+import { TaxScenario } from '@/components/ScenarioCompare';
 
 // List of US states for the dropdown
 const US_STATES = [
@@ -57,6 +62,24 @@ const TaxCalculator: React.FC = () => {
   const [eligibleDeductions, setEligibleDeductions] = useState<DeductionInfo[]>([]);
   const [stateEligibleDeductions, setStateEligibleDeductions] = useState<DeductionInfo[]>([]);
   
+  // User authentication state
+  const [user, setUser] = useState<User | null>(null);
+  
+  // Saved scenarios state
+  const [savedScenarios, setSavedScenarios] = useState<TaxScenario[]>([]);
+  
+  // Initialize user from localStorage on component mount
+  useEffect(() => {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+    
+    // Load saved scenarios for the user if they're logged in
+    if (currentUser) {
+      const userScenarios = profileService.getProfiles(currentUser.id);
+      setSavedScenarios(userScenarios);
+    }
+  }, []);
+  
   // Handle tax form data
   const handleFormProcessed = (formData: {
     income?: number;
@@ -77,6 +100,76 @@ const TaxCalculator: React.FC = () => {
     if (formData.stateWithholding) {
       setStateWithholding(prevWithholding => prevWithholding + formData.stateWithholding!);
     }
+  };
+  
+  // Authentication handlers
+  const handleLogin = (email: string, password: string) => {
+    try {
+      const loggedInUser = authService.login(email, password);
+      setUser(loggedInUser);
+      
+      // Load saved scenarios for the user
+      const userScenarios = profileService.getProfiles(loggedInUser.id);
+      setSavedScenarios(userScenarios);
+    } catch (error) {
+      console.error('Login failed:', error);
+    }
+  };
+  
+  const handleSignup = (email: string, password: string, name: string) => {
+    try {
+      const newUser = authService.signup(email, password, name);
+      setUser(newUser);
+      setSavedScenarios([]);
+    } catch (error) {
+      console.error('Signup failed:', error);
+    }
+  };
+  
+  const handleLogout = () => {
+    authService.logout();
+    setUser(null);
+    setSavedScenarios([]);
+  };
+  
+  // Scenario management handlers
+  const handleSaveScenario = (name: string) => {
+    if (!user) return;
+    
+    const newScenario: Omit<TaxScenario, 'id'> = {
+      name,
+      income,
+      filingStatus,
+      deductions,
+      useStandardDeduction,
+      federalWithholding,
+      stateWithholding,
+      includeStateTaxes,
+      selectedState,
+      results,
+      stateResults
+    };
+    
+    const savedScenario = profileService.saveProfile(user.id, newScenario);
+    setSavedScenarios(prev => [...prev, savedScenario]);
+  };
+  
+  const handleLoadScenario = (scenario: TaxScenario) => {
+    setIncome(scenario.income);
+    setFilingStatus(scenario.filingStatus);
+    setDeductions(scenario.deductions);
+    setUseStandardDeduction(scenario.useStandardDeduction);
+    setFederalWithholding(scenario.federalWithholding);
+    setStateWithholding(scenario.stateWithholding);
+    setIncludeStateTaxes(scenario.includeStateTaxes);
+    setSelectedState(scenario.selectedState);
+  };
+  
+  const handleDeleteScenario = (id: string) => {
+    if (!user) return;
+    
+    profileService.deleteProfile(user.id, id);
+    setSavedScenarios(prev => prev.filter(scenario => scenario.id !== id));
   };
   
   // Calculate taxes whenever inputs change
@@ -124,8 +217,31 @@ const TaxCalculator: React.FC = () => {
     }
   }, [income, federalWithholding, stateWithholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState]);
 
+  // Get current scenario
+  const currentScenario: Omit<TaxScenario, 'id' | 'name'> = {
+    income,
+    filingStatus,
+    deductions,
+    useStandardDeduction,
+    federalWithholding,
+    stateWithholding,
+    includeStateTaxes,
+    selectedState,
+    results,
+    stateResults
+  };
+
   return (
     <div className="w-full max-w-3xl mx-auto">
+      <div className="flex justify-end mb-4">
+        <AuthSection 
+          user={user} 
+          onLogin={handleLogin} 
+          onSignup={handleSignup} 
+          onLogout={handleLogout} 
+        />
+      </div>
+      
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
         <div className="col-span-1 lg:col-span-3 space-y-6">
           <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
@@ -137,12 +253,16 @@ const TaxCalculator: React.FC = () => {
                     onValueChange={setActiveTab}
                     className="w-full"
                   >
-                    <TabsList className="grid w-full grid-cols-4 mb-6">
+                    <TabsList className="grid w-full grid-cols-5">
                       <TabsTrigger value="income">Income</TabsTrigger>
                       <TabsTrigger value="deductions">Deductions</TabsTrigger>
                       <TabsTrigger value="upload">
                         <Upload className="h-4 w-4 mr-1" />
-                        Upload Forms
+                        Upload
+                      </TabsTrigger>
+                      <TabsTrigger value="compare">
+                        <Columns className="h-4 w-4 mr-1" />
+                        Compare
                       </TabsTrigger>
                       <TabsTrigger value="state" disabled={!includeStateTaxes}>State</TabsTrigger>
                     </TabsList>
@@ -212,6 +332,16 @@ const TaxCalculator: React.FC = () => {
                     
                     <TabsContent value="upload" className="mt-0">
                       <TaxFormUploader onFormProcessed={handleFormProcessed} />
+                    </TabsContent>
+                    
+                    <TabsContent value="compare" className="mt-0">
+                      <ScenarioCompare
+                        currentScenario={currentScenario}
+                        savedScenarios={savedScenarios}
+                        onSaveScenario={handleSaveScenario}
+                        onLoadScenario={handleLoadScenario}
+                        onDeleteScenario={handleDeleteScenario}
+                      />
                     </TabsContent>
                     
                     <TabsContent value="state" className="mt-0">
