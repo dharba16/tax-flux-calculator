@@ -1,928 +1,581 @@
 import { FilingStatus } from './taxCalculations';
 import { DeductionInfo } from './deductionEligibility';
 
+// Define interfaces for state tax calculations
+export interface StateTaxResults {
+  taxableIncome: number;
+  taxAmount: number;
+  effectiveRate: number;
+  marginRate: number;
+  filingStatus: FilingStatus;
+  standardDeduction: number;
+  brackets: TaxBracket[];
+  selectedDeductionsTotal: number;
+}
+
 export interface StateTaxInputs {
   income: number;
+  withholding?: number;
   filingStatus: FilingStatus;
   deductions: number;
   useStandardDeduction: boolean;
   state: string;
-  withholding?: number; // Making withholding optional with a default
-  selectedDeductions?: Array<{ id: string; amount: number }>; // Support for multiple deductions
+  selectedDeductions?: { id: string; amount: number; name: string }[];
 }
 
-export interface StateTaxResults {
-  taxableIncome: number;
-  taxLiability: number;
-  effectiveTaxRate: number;
-  marginalRate: number;
-  deductionAmount: number;
-  refundOrOwed: number;
-  selectedDeductionsTotal: number; // Added to match TaxResults
-  bracketBreakdown: Array<{
-    rate: number;
-    amount: number;
-    rangeStart: number;
-    rangeEnd: number;
-  }>;
+export interface TaxBracket {
+  min: number;
+  max: number | null;
+  rate: number;
 }
 
-// Tax types for state tax calculations
-const TAX_TYPES = {
-  Graduated: "Graduated",
-  Flat: "Flat",
-  NoIncomeTax: "No Income Tax"
+// State-specific standard deductions
+const stateStandardDeductions: Record<string, Record<FilingStatus, number>> = {
+  'California': {
+    'single': 4803,
+    'married': 9606,
+    'marriedSeparate': 4803,
+    'headOfHousehold': 9606
+  },
+  'New York': {
+    'single': 8000,
+    'married': 16050,
+    'marriedSeparate': 8000,
+    'headOfHousehold': 11200
+  },
+  'Texas': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Florida': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Illinois': {
+    'single': 2375,
+    'married': 4750,
+    'marriedSeparate': 2375,
+    'headOfHousehold': 2375
+  },
+  'Pennsylvania': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Ohio': {
+    'single': 2400,
+    'married': 4800,
+    'marriedSeparate': 2400,
+    'headOfHousehold': 3600
+  },
+  'Michigan': {
+    'single': 4900,
+    'married': 9800,
+    'marriedSeparate': 4900,
+    'headOfHousehold': 4900
+  },
+  'Georgia': {
+    'single': 5400,
+    'married': 7100,
+    'marriedSeparate': 3550,
+    'headOfHousehold': 7100
+  },
+  'North Carolina': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'New Jersey': {
+    'single': 3000,
+    'married': 6000,
+    'marriedSeparate': 3000,
+    'headOfHousehold': 4500
+  },
+  'Virginia': {
+    'single': 4500,
+    'married': 9000,
+    'marriedSeparate': 4500,
+    'headOfHousehold': 4500
+  },
+  'Washington': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Massachusetts': {
+    'single': 3600,
+    'married': 7200,
+    'marriedSeparate': 3600,
+    'headOfHousehold': 5600
+  },
+  'Indiana': {
+    'single': 1000,
+    'married': 2000,
+    'marriedSeparate': 1000,
+    'headOfHousehold': 1000
+  },
+  'Arizona': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Tennessee': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Missouri': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Maryland': {
+    'single': 2300,
+    'married': 4600,
+    'marriedSeparate': 2300,
+    'headOfHousehold': 2300
+  },
+  'Wisconsin': {
+    'single': 11130,
+    'married': 20760,
+    'marriedSeparate': 10380,
+    'headOfHousehold': 14470
+  },
+  'Minnesota': {
+    'single': 12750,
+    'married': 25500,
+    'marriedSeparate': 12750,
+    'headOfHousehold': 19200
+  },
+  'Colorado': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Alabama': {
+    'single': 2500,
+    'married': 7500,
+    'marriedSeparate': 3750,
+    'headOfHousehold': 4700
+  },
+  'South Carolina': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Louisiana': {
+    'single': 4500,
+    'married': 9000,
+    'marriedSeparate': 4500,
+    'headOfHousehold': 9000
+  },
+  'Kentucky': {
+    'single': 2690,
+    'married': 5380,
+    'marriedSeparate': 2690,
+    'headOfHousehold': 2690
+  },
+  'Oregon': {
+    'single': 2270,
+    'married': 4545,
+    'marriedSeparate': 2270,
+    'headOfHousehold': 3655
+  },
+  'Oklahoma': {
+    'single': 6350,
+    'married': 12700,
+    'marriedSeparate': 6350,
+    'headOfHousehold': 9350
+  },
+  'Connecticut': {
+    'single': 15000,
+    'married': 24000,
+    'marriedSeparate': 12000,
+    'headOfHousehold': 19000
+  },
+  'Iowa': {
+    'single': 2110,
+    'married': 5210,
+    'marriedSeparate': 2110,
+    'headOfHousehold': 5210
+  },
+  'Mississippi': {
+    'single': 6000,
+    'married': 12000,
+    'marriedSeparate': 6000,
+    'headOfHousehold': 8000
+  },
+  'Arkansas': {
+    'single': 2200,
+    'married': 4400,
+    'marriedSeparate': 2200,
+    'headOfHousehold': 3200
+  },
+  'Kansas': {
+    'single': 3000,
+    'married': 7500,
+    'marriedSeparate': 3750,
+    'headOfHousehold': 5500
+  },
+  'Utah': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Nevada': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'New Mexico': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Nebraska': {
+    'single': 6900,
+    'married': 13800,
+    'marriedSeparate': 6900,
+    'headOfHousehold': 10100
+  },
+  'West Virginia': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Idaho': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Hawaii': {
+    'single': 2200,
+    'married': 4400,
+    'marriedSeparate': 2200,
+    'headOfHousehold': 3212
+  },
+  'Maine': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'New Hampshire': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Rhode Island': {
+    'single': 8900,
+    'married': 17800,
+    'marriedSeparate': 8900,
+    'headOfHousehold': 13850
+  },
+  'Montana': {
+    'single': 4790,
+    'married': 9580,
+    'marriedSeparate': 4790,
+    'headOfHousehold': 4790
+  },
+  'Delaware': {
+    'single': 3250,
+    'married': 6500,
+    'marriedSeparate': 3250,
+    'headOfHousehold': 3250
+  },
+  'South Dakota': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'North Dakota': {
+    'single': 12200,
+    'married': 24400,
+    'marriedSeparate': 12200,
+    'headOfHousehold': 18350
+  },
+  'Alaska': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  },
+  'Vermont': {
+    'single': 6150,
+    'married': 12300,
+    'marriedSeparate': 6150,
+    'headOfHousehold': 9650
+  },
+  'Wyoming': {
+    'single': 0,
+    'married': 0,
+    'marriedSeparate': 0,
+    'headOfHousehold': 0
+  }
 };
 
-// States with no income tax based on the new information
-const NO_INCOME_TAX_STATES = [
-  'Alaska', 'Florida', 'Nevada', 'New Hampshire', 'South Dakota', 
-  'Tennessee', 'Texas', 'Washington', 'Wyoming'
-];
-
-// States with flat tax rates based on the new information
-const FLAT_TAX_STATES = [
-  'Arizona', 'Colorado', 'Idaho', 'Illinois', 'Indiana',
-  'Iowa', 'Kentucky', 'Massachusetts', 'Michigan', 'Mississippi',
-  'North Carolina', 'Pennsylvania', 'Utah'
-];
-
-// State Tax Brackets for 2023 - updated from image
-const STATE_TAX_BRACKETS = {
-  // States with graduated tax rates
-  "Alabama": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 500, rate: 0.02 },
-      { min: 501, max: 3000, rate: 0.04 },
-      { min: 3001, max: Infinity, rate: 0.05 },
+// State tax brackets
+const stateTaxBrackets: Record<string, Record<FilingStatus, TaxBracket[]>> = {
+  'California': {
+    'single': [
+      { min: 0, max: 9325, rate: 0.01 },
+      { min: 9326, max: 22107, rate: 0.02 },
+      { min: 22108, max: 34892, rate: 0.04 },
+      { min: 34893, max: 48435, rate: 0.06 },
+      { min: 48436, max: 61214, rate: 0.08 },
+      { min: 61215, max: 312686, rate: 0.093 },
+      { min: 312687, max: 375221, rate: 0.103 },
+      { min: 375222, max: 625369, rate: 0.113 },
+      { min: 625370, max: null, rate: 0.123 }
     ],
-    married: [
-      { min: 0, max: 1000, rate: 0.02 },
-      { min: 1001, max: 6000, rate: 0.04 },
-      { min: 6001, max: Infinity, rate: 0.05 },
+    'married': [
+      { min: 0, max: 18650, rate: 0.01 },
+      { min: 18651, max: 44214, rate: 0.02 },
+      { min: 44215, max: 69784, rate: 0.04 },
+      { min: 69785, max: 96870, rate: 0.06 },
+      { min: 96871, max: 122428, rate: 0.08 },
+      { min: 122429, max: 625372, rate: 0.093 },
+      { min: 625373, max: 750442, rate: 0.103 },
+      { min: 750443, max: 1250738, rate: 0.113 },
+      { min: 1250739, max: null, rate: 0.123 }
     ],
-    headOfHousehold: [
-      { min: 0, max: 500, rate: 0.02 },
-      { min: 501, max: 3000, rate: 0.04 },
-      { min: 3001, max: Infinity, rate: 0.05 },
+    'marriedSeparate': [
+      { min: 0, max: 9325, rate: 0.01 },
+      { min: 9326, max: 22107, rate: 0.02 },
+      { min: 22108, max: 34892, rate: 0.04 },
+      { min: 34893, max: 48435, rate: 0.06 },
+      { min: 48436, max: 61214, rate: 0.08 },
+      { min: 61215, max: 312686, rate: 0.093 },
+      { min: 312687, max: 375221, rate: 0.103 },
+      { min: 375222, max: 625369, rate: 0.113 },
+      { min: 625370, max: null, rate: 0.123 }
     ],
+    'headOfHousehold': [
+      { min: 0, max: 18663, rate: 0.01 },
+      { min: 18664, max: 44217, rate: 0.02 },
+      { min: 44218, max: 56999, rate: 0.04 },
+      { min: 57000, max: 70542, rate: 0.06 },
+      { min: 70543, max: 83324, rate: 0.08 },
+      { min: 83325, max: 425251, rate: 0.093 },
+      { min: 425252, max: 510303, rate: 0.103 },
+      { min: 510304, max: 850503, rate: 0.113 },
+      { min: 850504, max: null, rate: 0.123 }
+    ]
   },
-  "Arkansas": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 4300, rate: 0.02 },
-      { min: 4301, max: 8500, rate: 0.04 },
-      { min: 8501, max: Infinity, rate: 0.055 }
-    ],
-    married: [
-      { min: 0, max: 4300, rate: 0.02 },
-      { min: 4301, max: 8500, rate: 0.04 },
-      { min: 8501, max: Infinity, rate: 0.055 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 4300, rate: 0.02 },
-      { min: 4301, max: 8500, rate: 0.04 },
-      { min: 8501, max: Infinity, rate: 0.055 }
-    ],
-  },
-  "California": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 10099, rate: 0.01 },
-      { min: 10100, max: 23942, rate: 0.02 },
-      { min: 23943, max: 37788, rate: 0.04 },
-      { min: 37789, max: 52455, rate: 0.06 },
-      { min: 52456, max: 66295, rate: 0.08 },
-      { min: 66296, max: 338639, rate: 0.093 },
-      { min: 338640, max: 406364, rate: 0.103 },
-      { min: 406365, max: 677275, rate: 0.113 },
-      { min: 677276, max: Infinity, rate: 0.123 },
-    ],
-    married: [
-      { min: 0, max: 20198, rate: 0.01 },
-      { min: 20199, max: 47884, rate: 0.02 },
-      { min: 47885, max: 75576, rate: 0.04 },
-      { min: 75577, max: 104910, rate: 0.06 },
-      { min: 104911, max: 132590, rate: 0.08 },
-      { min: 132591, max: 677278, rate: 0.093 },
-      { min: 677279, max: 812728, rate: 0.103 },
-      { min: 812729, max: 1354550, rate: 0.113 },
-      { min: 1354551, max: Infinity, rate: 0.123 },
-    ],
-    headOfHousehold: [
-      { min: 0, max: 20212, rate: 0.01 },
-      { min: 20213, max: 47887, rate: 0.02 },
-      { min: 47888, max: 61730, rate: 0.04 },
-      { min: 61731, max: 76397, rate: 0.06 },
-      { min: 76398, max: 90240, rate: 0.08 },
-      { min: 90241, max: 460547, rate: 0.093 },
-      { min: 460548, max: 552658, rate: 0.103 },
-      { min: 552659, max: 921095, rate: 0.113 },
-      { min: 921096, max: Infinity, rate: 0.123 },
-    ],
-  },
-  "Connecticut": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 10000, rate: 0.03 },
-      { min: 10001, max: 50000, rate: 0.05 },
-      { min: 50001, max: 100000, rate: 0.055 },
-      { min: 100001, max: 200000, rate: 0.06 },
-      { min: 200001, max: Infinity, rate: 0.069 }
-    ],
-    married: [
-      { min: 0, max: 20000, rate: 0.03 },
-      { min: 20001, max: 100000, rate: 0.05 },
-      { min: 100001, max: 200000, rate: 0.055 },
-      { min: 200001, max: 400000, rate: 0.06 },
-      { min: 400001, max: Infinity, rate: 0.069 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 16000, rate: 0.03 },
-      { min: 16001, max: 80000, rate: 0.05 },
-      { min: 80001, max: 160000, rate: 0.055 },
-      { min: 160001, max: 320000, rate: 0.06 },
-      { min: 320001, max: Infinity, rate: 0.069 }
-    ],
-  },
-  "Delaware": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 5000, rate: 0.022 },
-      { min: 5001, max: 10000, rate: 0.039 },
-      { min: 10001, max: 20000, rate: 0.048 },
-      { min: 20001, max: 25000, rate: 0.052 },
-      { min: 25001, max: 60000, rate: 0.055 },
-      { min: 60001, max: Infinity, rate: 0.066 }
-    ],
-    married: [
-      { min: 0, max: 5000, rate: 0.022 },
-      { min: 5001, max: 10000, rate: 0.039 },
-      { min: 10001, max: 20000, rate: 0.048 },
-      { min: 20001, max: 25000, rate: 0.052 },
-      { min: 25001, max: 60000, rate: 0.055 },
-      { min: 60001, max: Infinity, rate: 0.066 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 5000, rate: 0.022 },
-      { min: 5001, max: 10000, rate: 0.039 },
-      { min: 10001, max: 20000, rate: 0.048 },
-      { min: 20001, max: 25000, rate: 0.052 },
-      { min: 25001, max: 60000, rate: 0.055 },
-      { min: 60001, max: Infinity, rate: 0.066 }
-    ],
-  },
-  "District of Columbia": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 10000, rate: 0.04 },
-      { min: 10001, max: 40000, rate: 0.06 },
-      { min: 40001, max: 60000, rate: 0.065 },
-      { min: 60001, max: 250000, rate: 0.085 },
-      { min: 250001, max: 500000, rate: 0.0925 },
-      { min: 500001, max: 1000000, rate: 0.0975 },
-      { min: 1000001, max: Infinity, rate: 0.1075 }
-    ],
-    married: [
-      { min: 0, max: 10000, rate: 0.04 },
-      { min: 10001, max: 40000, rate: 0.06 },
-      { min: 40001, max: 60000, rate: 0.065 },
-      { min: 60001, max: 250000, rate: 0.085 },
-      { min: 250001, max: 500000, rate: 0.0925 },
-      { min: 500001, max: 1000000, rate: 0.0975 },
-      { min: 1000001, max: Infinity, rate: 0.1075 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 10000, rate: 0.04 },
-      { min: 10001, max: 40000, rate: 0.06 },
-      { min: 40001, max: 60000, rate: 0.065 },
-      { min: 60001, max: 250000, rate: 0.085 },
-      { min: 250001, max: 500000, rate: 0.0925 },
-      { min: 500001, max: 1000000, rate: 0.0975 },
-      { min: 1000001, max: Infinity, rate: 0.1075 }
-    ],
-  },
-  "Hawaii": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 2400, rate: 0.014 },
-      { min: 2401, max: 4800, rate: 0.032 },
-      { min: 4801, max: 9600, rate: 0.055 },
-      { min: 9601, max: 14400, rate: 0.064 },
-      { min: 14401, max: 19200, rate: 0.068 },
-      { min: 19201, max: 24000, rate: 0.072 },
-      { min: 24001, max: 36000, rate: 0.076 },
-      { min: 36001, max: 48000, rate: 0.079 },
-      { min: 48001, max: 150000, rate: 0.0825 },
-      { min: 150001, max: 175000, rate: 0.09 },
-      { min: 175001, max: 200000, rate: 0.10 },
-      { min: 200001, max: Infinity, rate: 0.11 }
-    ],
-    married: [
-      { min: 0, max: 4800, rate: 0.014 },
-      { min: 4801, max: 9600, rate: 0.032 },
-      { min: 9601, max: 19200, rate: 0.055 },
-      { min: 19201, max: 28800, rate: 0.064 },
-      { min: 28801, max: 38400, rate: 0.068 },
-      { min: 38401, max: 48000, rate: 0.072 },
-      { min: 48001, max: 72000, rate: 0.076 },
-      { min: 72001, max: 96000, rate: 0.079 },
-      { min: 96001, max: 300000, rate: 0.0825 },
-      { min: 300001, max: 350000, rate: 0.09 },
-      { min: 350001, max: 400000, rate: 0.10 },
-      { min: 400001, max: Infinity, rate: 0.11 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 3600, rate: 0.014 },
-      { min: 3601, max: 7200, rate: 0.032 },
-      { min: 7201, max: 14400, rate: 0.055 },
-      { min: 14401, max: 21600, rate: 0.064 },
-      { min: 21601, max: 28800, rate: 0.068 },
-      { min: 28801, max: 36000, rate: 0.072 },
-      { min: 36001, max: 54000, rate: 0.076 },
-      { min: 54001, max: 72000, rate: 0.079 },
-      { min: 72001, max: 225000, rate: 0.0825 },
-      { min: 225001, max: 262500, rate: 0.09 },
-      { min: 262501, max: 300000, rate: 0.10 },
-      { min: 300001, max: Infinity, rate: 0.11 }
-    ],
-  },
-  "Kansas": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 15000, rate: 0.031 },
-      { min: 15001, max: 30000, rate: 0.057 },
-      { min: 30001, max: Infinity, rate: 0.057 }
-    ],
-    married: [
-      { min: 0, max: 30000, rate: 0.031 },
-      { min: 30001, max: 60000, rate: 0.057 },
-      { min: 60001, max: Infinity, rate: 0.057 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 15000, rate: 0.031 },
-      { min: 15001, max: 30000, rate: 0.057 },
-      { min: 30001, max: Infinity, rate: 0.057 }
-    ],
-  },
-  "Louisiana": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 12500, rate: 0.0185 },
-      { min: 12501, max: 50000, rate: 0.035 },
-      { min: 50001, max: Infinity, rate: 0.0425 }
-    ],
-    married: [
-      { min: 0, max: 25000, rate: 0.0185 },
-      { min: 25001, max: 100000, rate: 0.035 },
-      { min: 100001, max: Infinity, rate: 0.0425 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 12500, rate: 0.0185 },
-      { min: 12501, max: 50000, rate: 0.035 },
-      { min: 50001, max: Infinity, rate: 0.0425 }
-    ],
-  },
-  "Maine": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 23000, rate: 0.058 },
-      { min: 23001, max: 54450, rate: 0.0675 },
-      { min: 54451, max: Infinity, rate: 0.0715 }
-    ],
-    married: [
-      { min: 0, max: 46000, rate: 0.058 },
-      { min: 46001, max: 108900, rate: 0.0675 },
-      { min: 108901, max: Infinity, rate: 0.0715 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 34500, rate: 0.058 },
-      { min: 34501, max: 81700, rate: 0.0675 },
-      { min: 81701, max: Infinity, rate: 0.0715 }
-    ],
-  },
-  "Maryland": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 1000, rate: 0.02 },
-      { min: 1001, max: 2000, rate: 0.03 },
-      { min: 2001, max: 3000, rate: 0.04 },
-      { min: 3001, max: 100000, rate: 0.0475 },
-      { min: 100001, max: 125000, rate: 0.05 },
-      { min: 125001, max: 150000, rate: 0.0525 },
-      { min: 150001, max: 250000, rate: 0.055 },
-      { min: 250001, max: Infinity, rate: 0.0575 }
-    ],
-    married: [
-      { min: 0, max: 1000, rate: 0.02 },
-      { min: 1001, max: 2000, rate: 0.03 },
-      { min: 2001, max: 3000, rate: 0.04 },
-      { min: 3001, max: 150000, rate: 0.0475 },
-      { min: 150001, max: 175000, rate: 0.05 },
-      { min: 175001, max: 225000, rate: 0.0525 },
-      { min: 225001, max: 300000, rate: 0.055 },
-      { min: 300001, max: Infinity, rate: 0.0575 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 1000, rate: 0.02 },
-      { min: 1001, max: 2000, rate: 0.03 },
-      { min: 2001, max: 3000, rate: 0.04 },
-      { min: 3001, max: 150000, rate: 0.0475 },
-      { min: 150001, max: 175000, rate: 0.05 },
-      { min: 175001, max: 225000, rate: 0.0525 },
-      { min: 225001, max: 300000, rate: 0.055 },
-      { min: 300001, max: Infinity, rate: 0.0575 }
-    ],
-  },
-  "Minnesota": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 30070, rate: 0.0535 },
-      { min: 30071, max: 98760, rate: 0.068 },
-      { min: 98761, max: 183340, rate: 0.0785 },
-      { min: 183341, max: Infinity, rate: 0.0985 }
-    ],
-    married: [
-      { min: 0, max: 43950, rate: 0.0535 },
-      { min: 43951, max: 174610, rate: 0.068 },
-      { min: 174611, max: 304970, rate: 0.0785 },
-      { min: 304971, max: Infinity, rate: 0.0985 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 37010, rate: 0.0535 },
-      { min: 37011, max: 136680, rate: 0.068 },
-      { min: 136681, max: 244150, rate: 0.0785 },
-      { min: 244151, max: Infinity, rate: 0.0985 }
-    ],
-  },
-  "Missouri": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 1000, rate: 0.015 },
-      { min: 1001, max: 2000, rate: 0.02 },
-      { min: 2001, max: 3000, rate: 0.025 },
-      { min: 3001, max: 4000, rate: 0.03 },
-      { min: 4001, max: 5000, rate: 0.035 },
-      { min: 5001, max: 6000, rate: 0.04 },
-      { min: 6001, max: 7000, rate: 0.045 },
-      { min: 7001, max: 8000, rate: 0.05 },
-      { min: 8001, max: 9000, rate: 0.054 },
-      { min: 9001, max: Infinity, rate: 0.054 }
-    ],
-    married: [
-      { min: 0, max: 1000, rate: 0.015 },
-      { min: 1001, max: 2000, rate: 0.02 },
-      { min: 2001, max: 3000, rate: 0.025 },
-      { min: 3001, max: 4000, rate: 0.03 },
-      { min: 4001, max: 5000, rate: 0.035 },
-      { min: 5001, max: 6000, rate: 0.04 },
-      { min: 6001, max: 7000, rate: 0.045 },
-      { min: 7001, max: 8000, rate: 0.05 },
-      { min: 8001, max: 9000, rate: 0.054 },
-      { min: 9001, max: Infinity, rate: 0.054 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 1000, rate: 0.015 },
-      { min: 1001, max: 2000, rate: 0.02 },
-      { min: 2001, max: 3000, rate: 0.025 },
-      { min: 3001, max: 4000, rate: 0.03 },
-      { min: 4001, max: 5000, rate: 0.035 },
-      { min: 5001, max: 6000, rate: 0.04 },
-      { min: 6001, max: 7000, rate: 0.045 },
-      { min: 7001, max: 8000, rate: 0.05 },
-      { min: 8001, max: 9000, rate: 0.054 },
-      { min: 9001, max: Infinity, rate: 0.054 }
-    ],
-  },
-  "Montana": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 3300, rate: 0.01 },
-      { min: 3301, max: 5800, rate: 0.02 },
-      { min: 5801, max: 8900, rate: 0.03 },
-      { min: 8901, max: 12000, rate: 0.04 },
-      { min: 12001, max: 15400, rate: 0.05 },
-      { min: 15401, max: 19800, rate: 0.06 },
-      { min: 19801, max: Infinity, rate: 0.0675 }
-    ],
-    married: [
-      { min: 0, max: 3300, rate: 0.01 },
-      { min: 3301, max: 5800, rate: 0.02 },
-      { min: 5801, max: 8900, rate: 0.03 },
-      { min: 8901, max: 12000, rate: 0.04 },
-      { min: 12001, max: 15400, rate: 0.05 },
-      { min: 15401, max: 19800, rate: 0.06 },
-      { min: 19801, max: Infinity, rate: 0.0675 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 3300, rate: 0.01 },
-      { min: 3301, max: 5800, rate: 0.02 },
-      { min: 5801, max: 8900, rate: 0.03 },
-      { min: 8901, max: 12000, rate: 0.04 },
-      { min: 12001, max: 15400, rate: 0.05 },
-      { min: 15401, max: 19800, rate: 0.06 },
-      { min: 19801, max: Infinity, rate: 0.0675 }
-    ],
-  },
-  "Nebraska": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 3700, rate: 0.0246 },
-      { min: 3701, max: 22170, rate: 0.0351 },
-      { min: 22171, max: 35730, rate: 0.0501 },
-      { min: 35731, max: Infinity, rate: 0.0664 }
-    ],
-    married: [
-      { min: 0, max: 7400, rate: 0.0246 },
-      { min: 7401, max: 44340, rate: 0.0351 },
-      { min: 44341, max: 71460, rate: 0.0501 },
-      { min: 71461, max: Infinity, rate: 0.0664 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 6860, rate: 0.0246 },
-      { min: 6861, max: 40820, rate: 0.0351 },
-      { min: 40821, max: 65920, rate: 0.0501 },
-      { min: 65921, max: Infinity, rate: 0.0664 }
-    ],
-  },
-  "New Jersey": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 20000, rate: 0.014 },
-      { min: 20001, max: 35000, rate: 0.0175 },
-      { min: 35001, max: 40000, rate: 0.035 },
-      { min: 40001, max: 75000, rate: 0.0553 },
-      { min: 75001, max: 500000, rate: 0.0637 },
-      { min: 500001, max: 1000000, rate: 0.0897 },
-      { min: 1000001, max: Infinity, rate: 0.1075 }
-    ],
-    married: [
-      { min: 0, max: 20000, rate: 0.014 },
-      { min: 20001, max: 50000, rate: 0.0175 },
-      { min: 50001, max: 70000, rate: 0.035 },
-      { min: 70001, max: 80000, rate: 0.0553 },
-      { min: 80001, max: 150000, rate: 0.0637 },
-      { min: 150001, max: 500000, rate: 0.0897 },
-      { min: 500001, max: Infinity, rate: 0.1075 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 20000, rate: 0.014 },
-      { min: 20001, max: 50000, rate: 0.0175 },
-      { min: 50001, max: 70000, rate: 0.035 },
-      { min: 70001, max: 80000, rate: 0.0553 },
-      { min: 80001, max: 150000, rate: 0.0637 },
-      { min: 150001, max: 500000, rate: 0.0897 },
-      { min: 500001, max: Infinity, rate: 0.1075 }
-    ],
-  },
-  "New Mexico": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 5500, rate: 0.019 },
-      { min: 5501, max: 11000, rate: 0.032 },
-      { min: 11001, max: 16000, rate: 0.047 },
-      { min: 16001, max: Infinity, rate: 0.059 }
-    ],
-    married: [
-      { min: 0, max: 8000, rate: 0.019 },
-      { min: 8001, max: 16000, rate: 0.032 },
-      { min: 16001, max: 24000, rate: 0.047 },
-      { min: 24001, max: Infinity, rate: 0.059 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 8000, rate: 0.019 },
-      { min: 8001, max: 16000, rate: 0.032 },
-      { min: 16001, max: 24000, rate: 0.047 },
-      { min: 24001, max: Infinity, rate: 0.059 }
-    ],
-  },
-  "New York": {
-    type: TAX_TYPES.Graduated,
-    single: [
+  'New York': {
+    'single': [
       { min: 0, max: 8500, rate: 0.04 },
       { min: 8501, max: 11700, rate: 0.045 },
       { min: 11701, max: 13900, rate: 0.0525 },
-      { min: 13901, max: 21400, rate: 0.059 },
-      { min: 21401, max: 80650, rate: 0.0645 },
-      { min: 80651, max: 215400, rate: 0.0685 },
-      { min: 215401, max: 1077550, rate: 0.0965 },
-      { min: 1077551, max: Infinity, rate: 0.109 }
+      { min: 13901, max: 21400, rate: 0.055 },
+      { min: 21401, max: 80650, rate: 0.0585 },
+      { min: 80651, max: 215400, rate: 0.0625 },
+      { min: 215401, max: 1077550, rate: 0.0685 },
+      { min: 1077551, max: null, rate: 0.0882 }
     ],
-    married: [
+    'married': [
       { min: 0, max: 17150, rate: 0.04 },
       { min: 17151, max: 23600, rate: 0.045 },
       { min: 23601, max: 27900, rate: 0.0525 },
-      { min: 27901, max: 43000, rate: 0.059 },
-      { min: 43001, max: 161550, rate: 0.0645 },
-      { min: 161551, max: 323200, rate: 0.0685 },
-      { min: 323201, max: 2155350, rate: 0.0965 },
-      { min: 2155351, max: Infinity, rate: 0.109 }
+      { min: 27901, max: 43000, rate: 0.055 },
+      { min: 43001, max: 161550, rate: 0.0585 },
+      { min: 161551, max: 323200, rate: 0.0625 },
+      { min: 323201, max: 2155350, rate: 0.0685 },
+      { min: 2155351, max: null, rate: 0.0882 }
     ],
-    headOfHousehold: [
+    'marriedSeparate': [
+      { min: 0, max: 8500, rate: 0.04 },
+      { min: 8501, max: 11700, rate: 0.045 },
+      { min: 11701, max: 13900, rate: 0.0525 },
+      { min: 13901, max: 21400, rate: 0.055 },
+      { min: 21401, max: 80650, rate: 0.0585 },
+      { min: 80651, max: 215400, rate: 0.0625 },
+      { min: 215401, max: 1077550, rate: 0.0685 },
+      { min: 1077551, max: null, rate: 0.0882 }
+    ],
+    'headOfHousehold': [
       { min: 0, max: 12800, rate: 0.04 },
       { min: 12801, max: 17650, rate: 0.045 },
       { min: 17651, max: 20900, rate: 0.0525 },
-      { min: 20901, max: 32200, rate: 0.059 },
-      { min: 32201, max: 107650, rate: 0.0645 },
-      { min: 107651, max: 269300, rate: 0.0685 },
-      { min: 269301, max: 1616450, rate: 0.0965 },
-      { min: 1616451, max: Infinity, rate: 0.109 }
-    ],
+      { min: 20901, max: 32200, rate: 0.055 },
+      { min: 32201, max: 107650, rate: 0.0585 },
+      { min: 107651, max: 269300, rate: 0.0625 },
+      { min: 269301, max: 1616450, rate: 0.0685 },
+      { min: 1616451, max: null, rate: 0.0882 }
+    ]
   },
-  "North Dakota": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 40525, rate: 0.011 },
-      { min: 40526, max: 98100, rate: 0.0204 },
-      { min: 98101, max: 204675, rate: 0.0227 },
-      { min: 204676, max: 445000, rate: 0.0264 },
-      { min: 445001, max: Infinity, rate: 0.029 }
-    ],
-    married: [
-      { min: 0, max: 67700, rate: 0.011 },
-      { min: 67701, max: 163550, rate: 0.0204 },
-      { min: 163551, max: 249150, rate: 0.0227 },
-      { min: 249151, max: 445000, rate: 0.0264 },
-      { min: 445001, max: Infinity, rate: 0.029 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 54300, rate: 0.011 },
-      { min: 54301, max: 140200, rate: 0.0204 },
-      { min: 140201, max: 226950, rate: 0.0227 },
-      { min: 226951, max: 445000, rate: 0.0264 },
-      { min: 445001, max: Infinity, rate: 0.029 }
-    ],
+  'Texas': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
   },
-  "Ohio": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 25000, rate: 0.0 },
-      { min: 25001, max: 44250, rate: 0.0277 },
-      { min: 44251, max: 88450, rate: 0.0323 },
-      { min: 88451, max: 110650, rate: 0.038 },
-      { min: 110651, max: Infinity, rate: 0.0399 }
-    ],
-    married: [
-      { min: 0, max: 25000, rate: 0.0 },
-      { min: 25001, max: 44250, rate: 0.0277 },
-      { min: 44251, max: 88450, rate: 0.0323 },
-      { min: 88451, max: 110650, rate: 0.038 },
-      { min: 110651, max: Infinity, rate: 0.0399 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 25000, rate: 0.0 },
-      { min: 25001, max: 44250, rate: 0.0277 },
-      { min: 44251, max: 88450, rate: 0.0323 },
-      { min: 88451, max: 110650, rate: 0.038 },
-      { min: 110651, max: Infinity, rate: 0.0399 }
-    ],
+  'Florida': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
   },
-  "Oklahoma": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 1000, rate: 0.005 },
-      { min: 1001, max: 2500, rate: 0.01 },
-      { min: 2501, max: 3750, rate: 0.02 },
-      { min: 3751, max: 4900, rate: 0.03 },
-      { min: 4901, max: 7200, rate: 0.04 },
-      { min: 7201, max: Infinity, rate: 0.05 }
-    ],
-    married: [
-      { min: 0, max: 2000, rate: 0.005 },
-      { min: 2001, max: 5000, rate: 0.01 },
-      { min: 5001, max: 7500, rate: 0.02 },
-      { min: 7501, max: 9800, rate: 0.03 },
-      { min: 9801, max: 12200, rate: 0.04 },
-      { min: 12201, max: Infinity, rate: 0.05 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 2000, rate: 0.005 },
-      { min: 2001, max: 5000, rate: 0.01 },
-      { min: 5001, max: 7500, rate: 0.02 },
-      { min: 7501, max: 9800, rate: 0.03 },
-      { min: 9801, max: 12200, rate: 0.04 },
-      { min: 12201, max: Infinity, rate: 0.05 }
-    ],
+  'Illinois': {
+    'single': [{ min: 0, max: null, rate: 0.0495 }],
+    'married': [{ min: 0, max: null, rate: 0.0495 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0495 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0495 }]
   },
-  "Oregon": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 3650, rate: 0.0475 },
-      { min: 3651, max: 9200, rate: 0.0675 },
-      { min: 9201, max: 125000, rate: 0.0875 },
-      { min: 125001, max: Infinity, rate: 0.099 }
-    ],
-    married: [
-      { min: 0, max: 7300, rate: 0.0475 },
-      { min: 7301, max: 18400, rate: 0.0675 },
-      { min: 18401, max: 250000, rate: 0.0875 },
-      { min: 250001, max: Infinity, rate: 0.099 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 7300, rate: 0.0475 },
-      { min: 7301, max: 18400, rate: 0.0675 },
-      { min: 18401, max: 125000, rate: 0.0875 },
-      { min: 125001, max: Infinity, rate: 0.099 }
-    ],
+  'Pennsylvania': {
+    'single': [{ min: 0, max: null, rate: 0.0307 }],
+    'married': [{ min: 0, max: null, rate: 0.0307 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0307 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0307 }]
   },
-  "Rhode Island": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 66200, rate: 0.0375 },
-      { min: 66201, max: 150550, rate: 0.0475 },
-      { min: 150551, max: Infinity, rate: 0.0599 }
+  'Ohio': {
+    'single': [
+      { min: 0, max: 25000, rate: 0 },
+      { min: 25001, max: 44250, rate: 0.02765 },
+      { min: 44251, max: 88450, rate: 0.03226 },
+      { min: 88451, max: 110650, rate: 0.03688 },
+      { min: 110651, max: null, rate: 0.0399 }
     ],
-    married: [
-      { min: 0, max: 66200, rate: 0.0375 },
-      { min: 66201, max: 150550, rate: 0.0475 },
-      { min: 150551, max: Infinity, rate: 0.0599 }
+    'married': [
+      { min: 0, max: 25000, rate: 0 },
+      { min: 25001, max: 44250, rate: 0.02765 },
+      { min: 44251, max: 88450, rate: 0.03226 },
+      { min: 88451, max: 110650, rate: 0.03688 },
+      { min: 110651, max: null, rate: 0.0399 }
     ],
-    headOfHousehold: [
-      { min: 0, max: 66200, rate: 0.0375 },
-      { min: 66201, max: 150550, rate: 0.0475 },
-      { min: 150551, max: Infinity, rate: 0.0599 }
+    'marriedSeparate': [
+      { min: 0, max: 12500, rate: 0 },
+      { min: 12501, max: 22125, rate: 0.02765 },
+      { min: 22126, max: 44225, rate: 0.03226 },
+      { min: 44226, max: 55325, rate: 0.03688 },
+      { min: 55326, max: null, rate: 0.0399 }
     ],
+    'headOfHousehold': [
+      { min: 0, max: 25000, rate: 0 },
+      { min: 25001, max: 44250, rate: 0.02765 },
+      { min: 44251, max: 88450, rate: 0.03226 },
+      { min: 88451, max: 110650, rate: 0.03688 },
+      { min: 110651, max: null, rate: 0.0399 }
+    ]
   },
-  "South Carolina": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 3070, rate: 0.0 },
-      { min: 3071, max: 6150, rate: 0.03 },
-      { min: 6151, max: 9230, rate: 0.04 },
-      { min: 9231, max: 12310, rate: 0.05 },
-      { min: 12311, max: 15400, rate: 0.06 },
-      { min: 15401, max: Infinity, rate: 0.07 }
-    ],
-    married: [
-      { min: 0, max: 3070, rate: 0.0 },
-      { min: 3071, max: 6150, rate: 0.03 },
-      { min: 6151, max: 9230, rate: 0.04 },
-      { min: 9231, max: 12310, rate: 0.05 },
-      { min: 12311, max: 15400, rate: 0.06 },
-      { min: 15401, max: Infinity, rate: 0.07 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 3070, rate: 0.0 },
-      { min: 3071, max: 6150, rate: 0.03 },
-      { min: 6151, max: 9230, rate: 0.04 },
-      { min: 9231, max: 12310, rate: 0.05 },
-      { min: 12311, max: 15400, rate: 0.06 },
-      { min: 15401, max: Infinity, rate: 0.07 }
-    ],
+  'Michigan': {
+    'single': [{ min: 0, max: null, rate: 0.0405 }],
+    'married': [{ min: 0, max: null, rate: 0.0405 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0405 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0405 }]
   },
-  "Vermont": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 40950, rate: 0.0335 },
-      { min: 40951, max: 99200, rate: 0.066 },
-      { min: 99201, max: 206950, rate: 0.076 },
-      { min: 206951, max: Infinity, rate: 0.0875 }
+  'Georgia': {
+    'single': [
+      { min: 0, max: 7000, rate: 0.01 },
+      { min: 7001, max: 14000, rate: 0.02 },
+      { min: 14001, max: 21000, rate: 0.03 },
+      { min: 21001, max: 28000, rate: 0.04 },
+      { min: 28001, max: null, rate: 0.0575 }
     ],
-    married: [
-      { min: 0, max: 68400, rate: 0.0335 },
-      { min: 68401, max: 165350, rate: 0.066 },
-      { min: 165351, max: 251950, rate: 0.076 },
-      { min: 251951, max: Infinity, rate: 0.0875 }
+    'married': [
+      { min: 0, max: 1000, rate: 0.01 },
+      { min: 1001, max: 3000, rate: 0.02 },
+      { min: 3001, max: 5000, rate: 0.03 },
+      { min: 5001, max: 7000, rate: 0.04 },
+      { min: 7001, max: 10000, rate: 0.05 },
+      { min: 10001, max: null, rate: 0.0575 }
     ],
-    headOfHousehold: [
-      { min: 0, max: 54700, rate: 0.0335 },
-      { min: 54701, max: 132200, rate: 0.066 },
-      { min: 132201, max: 216600, rate: 0.076 },
-      { min: 216601, max: Infinity, rate: 0.0875 }
+    'marriedSeparate': [
+      { min: 0, max: 500, rate: 0.01 },
+      { min: 501, max: 1500, rate: 0.02 },
+      { min: 1501, max: 2500, rate: 0.03 },
+      { min: 2501, max: 3500, rate: 0.04 },
+      { min: 3501, max: 5000, rate: 0.05 },
+      { min: 5001, max: null, rate: 0.0575 }
     ],
+    'headOfHousehold': [
+      { min: 0, max: 7000, rate: 0.01 },
+      { min: 7001, max: 14000, rate: 0.02 },
+      { min: 14001, max: 21000, rate: 0.03 },
+      { min: 21001, max: 28000, rate: 0.04 },
+      { min: 28001, max: null, rate: 0.0575 }
+    ]
   },
-  "Virginia": {
-    type: TAX_TYPES.Graduated,
-    single: [
+  'North Carolina': {
+    'single': [{ min: 0, max: null, rate: 0.0475 }],
+    'married': [{ min: 0, max: null, rate: 0.0475 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0475 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0475 }]
+  },
+  'New Jersey': {
+    'single': [
+      { min: 0, max: 20000, rate: 0.014 },
+      { min: 20001, max: 35000, rate: 0.0175 },
+      { min: 35001, max: 40000, rate: 0.0245 },
+      { min: 40001, max: 75000, rate: 0.035 },
+      { min: 75001, max: 500000, rate: 0.05525 },
+      { min: 500001, max: null, rate: 0.0897 }
+    ],
+    'married': [
+      { min: 0, max: 20000, rate: 0.014 },
+      { min: 20001, max: 35000, rate: 0.0175 },
+      { min: 35001, max: 40000, rate: 0.0245 },
+      { min: 40001, max: 75000, rate: 0.035 },
+      { min: 75001, max: 500000, rate: 0.05525 },
+      { min: 500001, max: null, rate: 0.0897 }
+    ],
+    'marriedSeparate': [
+      { min: 0, max: 20000, rate: 0.014 },
+      { min: 20001, max: 35000, rate: 0.0175 },
+      { min: 35001, max: 40000, rate: 0.0245 },
+      { min: 40001, max: 75000, rate: 0.035 },
+      { min: 75001, max: 500000, rate: 0.05525 },
+      { min: 500001, max: null, rate: 0.0897 }
+    ],
+    'headOfHousehold': [
+      { min: 0, max: 20000, rate: 0.014 },
+      { min: 20001, max: 35000, rate: 0.0175 },
+      { min: 35001, max: 40000, rate: 0.0245 },
+      { min: 40001, max: 75000, rate: 0.035 },
+      { min: 75001, max: 500000, rate: 0.05525 },
+      { min: 500001, max: null, rate: 0.0897 }
+    ]
+  },
+  'Virginia': {
+    'single': [
       { min: 0, max: 3000, rate: 0.02 },
       { min: 3001, max: 5000, rate: 0.03 },
       { min: 5001, max: 17000, rate: 0.05 },
-      { min: 17001, max: Infinity, rate: 0.0575 }
+      { min: 17001, max: null, rate: 0.0575 }
     ],
-    married: [
+    'married': [
       { min: 0, max: 3000, rate: 0.02 },
       { min: 3001, max: 5000, rate: 0.03 },
       { min: 5001, max: 17000, rate: 0.05 },
-      { min: 17001, max: Infinity, rate: 0.0575 }
+      { min: 17001, max: null, rate: 0.0575 }
     ],
-    headOfHousehold: [
+    'marriedSeparate': [
+      { min: 0, max: 1500, rate: 0.02 },
+      { min: 1501, max: 2500, rate: 0.03 },
+      { min: 2501, max: 8500, rate: 0.05 },
+      { min: 8501, max: null, rate: 0.0575 }
+    ],
+    'headOfHousehold': [
       { min: 0, max: 3000, rate: 0.02 },
       { min: 3001, max: 5000, rate: 0.03 },
       { min: 5001, max: 17000, rate: 0.05 },
-      { min: 17001, max: Infinity, rate: 0.0575 }
-    ],
-  },
-  "West Virginia": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 10000, rate: 0.03 },
-      { min: 10001, max: 25000, rate: 0.04 },
-      { min: 25001, max: 40000, rate: 0.045 },
-      { min: 40001, max: 60000, rate: 0.06 },
-      { min: 60001, max: Infinity, rate: 0.065 }
-    ],
-    married: [
-      { min: 0, max: 10000, rate: 0.03 },
-      { min: 10001, max: 25000, rate: 0.04 },
-      { min: 25001, max: 40000, rate: 0.045 },
-      { min: 40001, max: 60000, rate: 0.06 },
-      { min: 60001, max: Infinity, rate: 0.065 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 10000, rate: 0.03 },
-      { min: 10001, max: 25000, rate: 0.04 },
-      { min: 25001, max: 40000, rate: 0.045 },
-      { min: 40001, max: 60000, rate: 0.06 },
-      { min: 60001, max: Infinity, rate: 0.065 }
-    ],
-  },
-  "Wisconsin": {
-    type: TAX_TYPES.Graduated,
-    single: [
-      { min: 0, max: 12760, rate: 0.0354 },
-      { min: 12761, max: 25520, rate: 0.0465 },
-      { min: 25521, max: 280950, rate: 0.0627 },
-      { min: 280951, max: Infinity, rate: 0.0765 }
-    ],
-    married: [
-      { min: 0, max: 17010, rate: 0.0354 },
-      { min: 17011, max: 34030, rate: 0.0465 },
-      { min: 34031, max: 374030, rate: 0.0627 },
-      { min: 374031, max: Infinity, rate: 0.0765 }
-    ],
-    headOfHousehold: [
-      { min: 0, max: 12760, rate: 0.0354 },
-      { min: 12761, max: 25520, rate: 0.0465 },
-      { min: 25521, max: 280950, rate: 0.0627 },
-      { min: 280951, max: Infinity, rate: 0.0765 }
-    ],
-  },
-};
-
-// Calculate state taxes - Main function
-export const calculateStateTax = (inputs: StateTaxInputs): StateTaxResults | null => {
-  const { income, filingStatus, deductions, useStandardDeduction, state, withholding = 0, selectedDeductions = [] } = inputs;
-  
-  // Calculate selected deductions total
-  const selectedDeductionsTotal = selectedDeductions.reduce((sum, deduction) => sum + deduction.amount, 0);
-  
-  // Check if state has no income tax
-  if (NO_INCOME_TAX_STATES.includes(state)) {
-    return {
-      taxableIncome: income,
-      taxLiability: 0,
-      effectiveTaxRate: 0,
-      marginalRate: 0,
-      deductionAmount: 0,
-      refundOrOwed: withholding,
-      selectedDeductionsTotal,
-      bracketBreakdown: []
-    };
-  }
-  
-  // Get the state's tax brackets or flat rate
-  const stateTaxInfo = STATE_TAX_BRACKETS[state as keyof typeof STATE_TAX_BRACKETS];
-  
-  if (!stateTaxInfo) {
-    console.error(`No tax information available for state: ${state}`);
-    return null;
-  }
-  
-  // Determine if graduated or flat tax
-  const isFlatTax = FLAT_TAX_STATES.includes(state);
-  
-  // Set standard deduction based on filing status (simplified for demonstration)
-  const standardDeduction = filingStatus === 'married' ? 25900 : (filingStatus === 'headOfHousehold' ? 19400 : 12950);
-  
-  // Determine deduction amount
-  const deductionAmount = useStandardDeduction ? standardDeduction : deductions;
-  
-  // Calculate taxable income
-  let taxableIncome = Math.max(0, income - deductionAmount - selectedDeductionsTotal);
-  
-  let taxLiability = 0;
-  let marginalRate = 0;
-  let bracketBreakdown: Array<{rate: number, amount: number, rangeStart: number, rangeEnd: number}> = [];
-  
-  if (isFlatTax) {
-    // Apply flat tax rate
-    const flatRate = 0.05; // Default to 5% if specific rate not available
-    taxLiability = taxableIncome * flatRate;
-    marginalRate = flatRate;
-    bracketBreakdown = [
-      {
-        rate: flatRate,
-        amount: taxLiability,
-        rangeStart: 0,
-        rangeEnd: taxableIncome
-      }
-    ];
-  } else {
-    // Apply graduated tax rates
-    const brackets = stateTaxInfo[filingStatus];
-    bracketBreakdown = [];
-    
-    if (brackets) {
-      let remainingIncome = taxableIncome;
-      
-      for (const bracket of brackets) {
-        const { min, max, rate } = bracket;
-        
-        if (remainingIncome <= 0) break;
-        
-        const taxableAmountInBracket = Math.min(remainingIncome, max - min);
-        
-        if (taxableAmountInBracket > 0) {
-          const taxForBracket = taxableAmountInBracket * rate;
-          taxLiability += taxForBracket;
-          
-          bracketBreakdown.push({
-            rate,
-            amount: taxForBracket,
-            rangeStart: min,
-            rangeEnd: min + taxableAmountInBracket
-          });
-          
-          remainingIncome -= taxableAmountInBracket;
-          marginalRate = rate; // Last bracket applied is the marginal rate
-        }
-      }
-    }
-  }
-  
-  // Calculate effective tax rate
-  const effectiveTaxRate = income > 0 ? taxLiability / income : 0;
-  
-  // Calculate refund or amount owed
-  const refundOrOwed = withholding - taxLiability;
-  
-  return {
-    taxableIncome,
-    taxLiability,
-    effectiveTaxRate,
-    marginalRate,
-    deductionAmount,
-    refundOrOwed,
-    selectedDeductionsTotal,
-    bracketBreakdown
-  };
-};
-
-// Export a function to get state-specific deduction information
-export const getStateDeductionInfo = (income: number, filingStatus: FilingStatus, state: string): DeductionInfo[] => {
-  // Sample state-specific deductions
-  // In a real implementation, this would vary by state
-  const stateDeductions: DeductionInfo[] = [
-    {
-      id: 'state_property_tax',
-      name: 'State Property Tax Credit',
-      description: 'Deduction for property taxes paid to the state',
-      eligibleAmount: Math.min(income * 0.01, 2500),
-      icon: 'home'
-    },
-    {
-      id: 'state_education_expenses',
-      name: 'Education Expenses Credit',
-      description: 'Credit for qualified education expenses',
-      eligibleAmount: filingStatus === 'married' ? 1000 : 500,
-      icon: 'school'
-    },
-    {
-      id: 'state_childcare',
-      name: 'Child Care Expenses',
-      description: 'Deduction for child care expenses',
-      eligibleAmount: filingStatus === 'single' ? 0 : 1200,
-      icon: 'baby'
-    },
-    {
-      id: 'state_commuter',
-      name: 'Commuter Credit',
-      description: 'Credit for public transportation',
-      eligibleAmount: 750,
-      icon: 'train'
-    },
-    {
-      id: 'state_healthcare',
-      name: 'Healthcare Premium Credit',
-      description: 'Credit for healthcare premium payments',
-      eligibleAmount: income < 100000 ? 1200 : 0,
-      icon: 'heart'
-    }
-  ];
-  
-  // For some high-tax states, add additional deductions
-  const highTaxStates = ['California', 'New York', 'New Jersey', 'Connecticut', 'Hawaii'];
-  
-  if (highTaxStates.includes(state)) {
-    stateDeductions.push({
-      id: 'state_high_tax_relief',
-      name: 'High Tax State Relief',
-      description: 'Special deduction for residents of high-tax states',
-      eligibleAmount: Math.min(income * 0.02, 5000),
-      icon: 'trending-down'
-    });
-  }
-  
-  return stateDeductions;
-};
+      { min: 17001

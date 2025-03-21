@@ -14,7 +14,9 @@ import {
   Home,
   Baby,
   Globe,
-  Check
+  Check,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import AnimatedNumber from './AnimatedNumber';
@@ -197,7 +199,7 @@ const DeductionsEligibility: React.FC<DeductionsEligibilityProps> = ({
         
         <div className="mt-4 pt-3 border-t border-border/40">
           <p className="text-xs text-muted-foreground">
-            Select potential deductions to include in your calculation. These will be added to your scenarios. Consult with a tax professional for personalized advice.
+            Select multiple potential deductions to include in your calculation. These will be added to your scenarios. Consult with a tax professional for personalized advice.
           </p>
         </div>
       </CardContent>
