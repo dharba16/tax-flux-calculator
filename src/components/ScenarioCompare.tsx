@@ -3,8 +3,15 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { PlusCircle, Copy, ArrowLeftRight } from 'lucide-react';
+import { PlusCircle, Copy, ArrowLeftRight, FileCheck } from 'lucide-react';
 import { TaxResults, formatCurrency, formatPercentage, FilingStatus } from '@/utils/taxCalculations';
+import { DeductionInfo } from '@/utils/deductionEligibility';
+
+export interface SelectedDeduction {
+  id: string;
+  amount: number;
+  name: string;
+}
 
 export interface TaxScenario {
   id: string;
@@ -19,6 +26,7 @@ export interface TaxScenario {
   selectedState: string;
   results: TaxResults | null;
   stateResults: TaxResults | null;
+  selectedDeductions: SelectedDeduction[];
 }
 
 interface ScenarioCompareProps {
@@ -151,6 +159,15 @@ const ScenarioCompare: React.FC<ScenarioCompareProps> = ({
                     <span className="text-muted-foreground">Filing Status:</span>
                     <span>{formatFilingStatus(scenario.filingStatus)}</span>
                   </div>
+                  {scenario.selectedDeductions.length > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Deductions:</span>
+                      <span className="flex items-center">
+                        <FileCheck className="h-3 w-3 mr-1 text-primary" />
+                        {scenario.selectedDeductions.length}
+                      </span>
+                    </div>
+                  )}
                   {scenario.results && (
                     <div className="flex justify-between font-medium pt-1">
                       <span>Total Refund/Owed:</span>
@@ -199,6 +216,23 @@ const ScenarioCompare: React.FC<ScenarioCompareProps> = ({
                         : `Itemized (${formatCurrency(currentScenario.deductions)})`}
                     </span>
                   </div>
+                  {currentScenario.selectedDeductions.length > 0 && (
+                    <div className="flex flex-col gap-1 pt-1">
+                      <span className="text-muted-foreground">Additional Deductions:</span>
+                      <ul className="pl-4 text-xs space-y-1">
+                        {currentScenario.selectedDeductions.map(deduction => (
+                          <li key={deduction.id} className="flex justify-between">
+                            <span>{deduction.name}</span>
+                            <span>{formatCurrency(deduction.amount)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex justify-between text-primary font-medium pt-1">
+                        <span>Total Extra Deductions:</span>
+                        <span>{formatCurrency(currentScenario.selectedDeductions.reduce((sum, d) => sum + d.amount, 0))}</span>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex justify-between font-medium pt-1">
                     <span>Federal Tax:</span>
                     <span>{formatCurrency(currentScenario.results.taxLiability)}</span>
@@ -242,6 +276,23 @@ const ScenarioCompare: React.FC<ScenarioCompareProps> = ({
                         : `Itemized (${formatCurrency(comparisonScenario.deductions)})`}
                     </span>
                   </div>
+                  {comparisonScenario.selectedDeductions.length > 0 && (
+                    <div className="flex flex-col gap-1 pt-1">
+                      <span className="text-muted-foreground">Additional Deductions:</span>
+                      <ul className="pl-4 text-xs space-y-1">
+                        {comparisonScenario.selectedDeductions.map(deduction => (
+                          <li key={deduction.id} className="flex justify-between">
+                            <span>{deduction.name}</span>
+                            <span>{formatCurrency(deduction.amount)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="flex justify-between text-primary font-medium pt-1">
+                        <span>Total Extra Deductions:</span>
+                        <span>{formatCurrency(comparisonScenario.selectedDeductions.reduce((sum, d) => sum + d.amount, 0))}</span>
+                      </div>
+                    </div>
+                  )}
                   {comparisonScenario.results && (
                     <>
                       <div className="flex justify-between font-medium pt-1">

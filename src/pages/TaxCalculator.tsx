@@ -28,7 +28,7 @@ const TaxCalculatorPage = () => {
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto text-balance mb-12 animate-slide-down text-center text-lg">
             Estimate your tax refund or amount owed based on your income, filing status, and deductions.
-            Now with support for all major filing statuses including Qualifying Surviving Spouse and Married Filing Separately.
+            Now with support for all major filing statuses and selectable tax deductions.
           </p>
           <div className="animate-fade-in max-w-5xl mx-auto">
             <TaxCalculator />

@@ -7,7 +7,7 @@ import ResultsDisplay from './ResultsDisplay';
 import DeductionsEligibility from './DeductionsEligibility';
 import StateTaxSettings from './StateTaxSettings';
 import TaxFormUploader from './TaxFormUploader';
-import ScenarioCompare from './ScenarioCompare';
+import ScenarioCompare, { TaxScenario, SelectedDeduction } from './ScenarioCompare';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
 import { calculateStateTax, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
@@ -24,7 +24,7 @@ import {
 import { CheckIcon, GlobeIcon, Upload, Columns } from 'lucide-react';
 import { authService, User } from '@/services/authService';
 import { profileService } from '@/services/profileService';
-import { TaxScenario } from '@/components/ScenarioCompare';
+import { toast } from 'sonner';
 
 const US_STATES = [
   'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 
@@ -55,6 +55,7 @@ const TaxCalculator: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('income');
   const [eligibleDeductions, setEligibleDeductions] = useState<DeductionInfo[]>([]);
   const [stateEligibleDeductions, setStateEligibleDeductions] = useState<DeductionInfo[]>([]);
+  const [selectedDeductionIds, setSelectedDeductionIds] = useState<string[]>([]);
   
   const [user, setUser] = useState<User | null>(null);
   
@@ -69,6 +70,34 @@ const TaxCalculator: React.FC = () => {
       setSavedScenarios(userScenarios);
     }
   }, []);
+  
+  const handleDeductionSelect = (id: string, selected: boolean) => {
+    setSelectedDeductionIds(prev => {
+      if (selected) {
+        return [...prev, id];
+      } else {
+        return prev.filter(dId => dId !== id);
+      }
+    });
+  };
+  
+  const getSelectedDeductions = (): SelectedDeduction[] => {
+    const allDeductions = [...eligibleDeductions, ...stateEligibleDeductions];
+    
+    return selectedDeductionIds
+      .map(id => {
+        const deduction = allDeductions.find(d => d.id === id);
+        if (deduction && deduction.eligibleAmount !== null) {
+          return {
+            id: deduction.id,
+            amount: deduction.eligibleAmount,
+            name: deduction.name
+          };
+        }
+        return null;
+      })
+      .filter((d): d is SelectedDeduction => d !== null);
+  };
   
   const handleFormProcessed = (formData: {
     income?: number;
@@ -117,7 +146,12 @@ const TaxCalculator: React.FC = () => {
   };
   
   const handleSaveScenario = (name: string) => {
-    if (!user) return;
+    if (!user) {
+      toast.error("Please log in to save scenarios");
+      return;
+    }
+    
+    const selectedDeductions = getSelectedDeductions();
     
     const newScenario: Omit<TaxScenario, 'id'> = {
       name,
@@ -130,11 +164,13 @@ const TaxCalculator: React.FC = () => {
       includeStateTaxes,
       selectedState,
       results,
-      stateResults
+      stateResults,
+      selectedDeductions
     };
     
     const savedScenario = profileService.saveProfile(user.id, newScenario);
     setSavedScenarios(prev => [...prev, savedScenario]);
+    toast.success(`Scenario "${name}" saved successfully!`);
   };
   
   const handleLoadScenario = (scenario: TaxScenario) => {
@@ -146,6 +182,11 @@ const TaxCalculator: React.FC = () => {
     setStateWithholding(scenario.stateWithholding);
     setIncludeStateTaxes(scenario.includeStateTaxes);
     setSelectedState(scenario.selectedState);
+    
+    const deductionIds = scenario.selectedDeductions.map(d => d.id);
+    setSelectedDeductionIds(deductionIds);
+    
+    toast.info(`Loaded scenario: ${scenario.name}`);
   };
   
   const handleDeleteScenario = (id: string) => {
@@ -153,15 +194,19 @@ const TaxCalculator: React.FC = () => {
     
     profileService.deleteProfile(user.id, id);
     setSavedScenarios(prev => prev.filter(scenario => scenario.id !== id));
+    toast.info("Scenario deleted");
   };
   
   useEffect(() => {
+    const selectedDeductions = getSelectedDeductions();
+    
     const result = calculateTaxes({
       income,
       withholding: federalWithholding,
       filingStatus,
       deductions,
-      useStandardDeduction
+      useStandardDeduction,
+      selectedDeductions
     });
     
     setResults(result);
@@ -176,7 +221,8 @@ const TaxCalculator: React.FC = () => {
         deductions,
         useStandardDeduction,
         state: selectedState,
-        withholding: stateWithholding
+        withholding: stateWithholding,
+        selectedDeductions
       });
       
       if (stateResult) {
@@ -192,7 +238,7 @@ const TaxCalculator: React.FC = () => {
       setStateResults(null);
       setStateEligibleDeductions([]);
     }
-  }, [income, federalWithholding, stateWithholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState]);
+  }, [income, federalWithholding, stateWithholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState, selectedDeductionIds]);
 
   const currentScenario: Omit<TaxScenario, 'id' | 'name'> = {
     income,
@@ -204,7 +250,8 @@ const TaxCalculator: React.FC = () => {
     includeStateTaxes,
     selectedState,
     results,
-    stateResults
+    stateResults,
+    selectedDeductions: getSelectedDeductions()
   };
 
   return (
@@ -327,6 +374,8 @@ const TaxCalculator: React.FC = () => {
             stateEligibleDeductions={includeStateTaxes ? stateEligibleDeductions : []}
             includeStateTaxes={includeStateTaxes}
             selectedState={selectedState}
+            selectedDeductionIds={selectedDeductionIds}
+            onDeductionSelect={handleDeductionSelect}
           />
         </div>
         

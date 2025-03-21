@@ -1,3 +1,4 @@
+
 /**
  * Tax brackets for 2023 based on filing status
  */
@@ -65,6 +66,7 @@ export interface TaxInputs {
   withholding: number;
   deductions: number;
   useStandardDeduction: boolean;
+  selectedDeductions?: Array<{ id: string; amount: number }>;
 }
 
 export interface TaxResults {
@@ -74,6 +76,7 @@ export interface TaxResults {
   refundOrOwed: number;
   marginalRate: number;
   deductionAmount: number;
+  selectedDeductionsTotal: number;
   bracketBreakdown: Array<{
     rate: number;
     amount: number;
@@ -86,11 +89,19 @@ export interface TaxResults {
  * Calculate taxes based on provided inputs
  */
 export function calculateTaxes(inputs: TaxInputs): TaxResults {
-  const { income, filingStatus, withholding, deductions, useStandardDeduction } = inputs;
+  const { income, filingStatus, withholding, deductions, useStandardDeduction, selectedDeductions = [] } = inputs;
   
+  // Calculate the total amount from selected deductions
+  const selectedDeductionsTotal = selectedDeductions.reduce((sum, deduction) => sum + deduction.amount, 0);
+  
+  // Determine the total deduction amount
+  const standardDeductionAmount = STANDARD_DEDUCTION[filingStatus];
+  const itemizedDeductionAmount = deductions + selectedDeductionsTotal;
+  
+  // Use the greater of standard or itemized deductions
   const deductionAmount = useStandardDeduction 
-    ? STANDARD_DEDUCTION[filingStatus] 
-    : deductions;
+    ? standardDeductionAmount 
+    : itemizedDeductionAmount;
 
   const taxableIncome = Math.max(0, income - deductionAmount);
   
@@ -133,6 +144,7 @@ export function calculateTaxes(inputs: TaxInputs): TaxResults {
     refundOrOwed,
     marginalRate: lastBracketUsed.rate,
     deductionAmount,
+    selectedDeductionsTotal,
     bracketBreakdown
   };
 }
