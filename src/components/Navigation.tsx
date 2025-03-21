@@ -52,57 +52,61 @@ const Navigation: React.FC<NavigationProps> = ({ hideAuth = false }) => {
   };
 
   return (
-    <div className="flex flex-col items-end">
-      <div className="mb-2">
+    <div className="flex flex-col items-end gap-4">
+      <div className="w-full flex justify-end items-center mb-4">
         {!hideAuth && (
           <>
             {user ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Welcome, {user.name}</span>
-                <Button variant="outline" size="sm" onClick={handleLogout}>
+              <div className="flex items-center gap-4 bg-muted/40 px-4 py-2 rounded-full shadow-sm">
+                <span className="text-sm text-foreground font-medium">Welcome, {user.name}</span>
+                <Button variant="outline" size="sm" className="rounded-full text-xs px-3 hover:bg-background/80" onClick={handleLogout}>
                   Logout
                 </Button>
               </div>
             ) : (
               <Dialog open={isLoginDialogOpen} onOpenChange={setIsLoginDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <LogIn className="h-4 w-4 mr-2" />
+                  <Button variant="outline" size="sm" className="rounded-full flex items-center gap-1.5 px-4 py-2 hover:bg-accent/50 transition-colors border-accent">
+                    <LogIn className="h-3.5 w-3.5" />
                     Login
                   </Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="sm:max-w-md">
                   <DialogHeader>
-                    <DialogTitle>Login</DialogTitle>
-                    <DialogDescription>
-                      Enter your credentials to access your account.
+                    <DialogTitle className="text-xl">Welcome Back</DialogTitle>
+                    <DialogDescription className="text-muted-foreground/90">
+                      Enter your credentials to access your account
                     </DialogDescription>
                   </DialogHeader>
 
-                  <div className="space-y-4 py-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                  <div className="space-y-6 py-4">
+                    <div className="space-y-3">
+                      <Label htmlFor="email" className="text-sm font-medium">Email</Label>
                       <Input 
                         id="email" 
                         type="email" 
+                        className="h-11"
                         value={email} 
                         onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
+                    <div className="space-y-3">
+                      <Label htmlFor="password" className="text-sm font-medium">Password</Label>
                       <Input 
                         id="password" 
-                        type="password" 
+                        type="password"
+                        className="h-11" 
                         value={password} 
                         onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
                       />
                     </div>
                     <Button 
-                      className="w-full" 
+                      className="w-full h-11 text-base font-medium" 
                       onClick={handleLogin}
                     >
-                      Login
+                      Sign In
                     </Button>
                   </div>
                 </DialogContent>
@@ -112,19 +116,19 @@ const Navigation: React.FC<NavigationProps> = ({ hideAuth = false }) => {
         )}
       </div>
       <NavigationMenu className="max-w-none w-full justify-end">
-        <NavigationMenuList>
+        <NavigationMenuList className="px-2 py-1 bg-background/50 backdrop-blur-sm border border-border/30 rounded-full shadow-sm">
           <NavigationMenuItem>
             <Link to="/">
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <Home className="mr-2 h-4 w-4" />
+              <NavigationMenuLink className={navigationMenuTriggerStyle() + " rounded-full gap-1.5 px-4"}>
+                <Home className="h-4 w-4" />
                 Home
               </NavigationMenuLink>
             </Link>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Link to="/tax-calculator">
-              <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                <Calculator className="mr-2 h-4 w-4" />
+              <NavigationMenuLink className={navigationMenuTriggerStyle() + " rounded-full gap-1.5 px-4"}>
+                <Calculator className="h-4 w-4" />
                 Tax Calculator
               </NavigationMenuLink>
             </Link>
