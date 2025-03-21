@@ -8,7 +8,7 @@ export interface StateTaxInputs {
   useStandardDeduction: boolean;
   state: string;
   withholding?: number; // Making withholding optional with a default
-  selectedDeductions?: Array<{ id: string; amount: number }>; // Added to match TaxInputs
+  selectedDeductions?: Array<{ id: string; amount: number }>; // Support for multiple deductions
 }
 
 export interface StateTaxResults {
@@ -430,4 +430,4 @@ const STATE_TAX_BRACKETS = {
     single: [
       { min: 0, max: 3700, rate: 0.0246 },
       { min: 3701, max: 22170, rate: 0.0351 },
-      { min: 22171, max:
+      { min: 22171,
