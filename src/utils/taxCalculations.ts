@@ -1,4 +1,3 @@
-
 /**
  * Tax brackets for 2023 based on filing status
  */
@@ -166,4 +165,37 @@ export function formatCurrency(amount: number): string {
  */
 export function formatPercentage(value: number): string {
   return (value * 100).toFixed(1) + '%';
+}
+
+/**
+ * Calculate withholding based on income and filing status
+ * This is used for estimating withholding from W-2 forms
+ */
+export function calculateWithholding(income: number, filingStatus: FilingStatus): {
+  federal: number;
+  state: number;
+} {
+  // Calculate estimated federal withholding based on income and filing status
+  // These are approximate calculations that mirror typical withholding
+  let federalBase = 0;
+  if (filingStatus === 'single' || filingStatus === 'marriedSeparate') {
+    federalBase = income * 0.18;  // Approximate federal tax rate for single filers
+  } else if (filingStatus === 'married' || filingStatus === 'qualifiedWidow') {
+    federalBase = income * 0.16;  // Slightly lower for joint filers
+  } else if (filingStatus === 'headOfHousehold') {
+    federalBase = income * 0.17;  // In between for head of household
+  }
+  
+  // Adjust for progressive nature of tax system
+  if (income > 100000) {
+    federalBase += (income - 100000) * 0.02;  // Additional withholding for higher incomes
+  }
+  
+  // Calculate state withholding (varies greatly by state, using average)
+  const stateWithholding = income * 0.045;  // Approximate 4.5% state tax
+  
+  return {
+    federal: Math.round(federalBase),
+    state: Math.round(stateWithholding)
+  };
 }
