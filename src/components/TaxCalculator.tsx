@@ -10,7 +10,7 @@ import TaxFormUploader from './TaxFormUploader';
 import ScenarioCompare, { TaxScenario, SelectedDeduction } from './ScenarioCompare';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
-import { calculateStateTax, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
+import { calculateStateTaxes, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
 import { Card, CardContent } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -37,7 +37,6 @@ const US_STATES = [
   'Wisconsin', 'Wyoming'
 ];
 
-const calculateStateTaxes = calculateStateTax;
 const getStateEligibleDeductions = getStateDeductionInfo;
 
 const TaxCalculator: React.FC = () => {
