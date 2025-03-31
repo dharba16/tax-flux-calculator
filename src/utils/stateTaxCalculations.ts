@@ -578,4 +578,400 @@ const stateTaxBrackets: Record<string, Record<FilingStatus, TaxBracket[]>> = {
       { min: 0, max: 3000, rate: 0.02 },
       { min: 3001, max: 5000, rate: 0.03 },
       { min: 5001, max: 17000, rate: 0.05 },
-      { min: 17
+      { min: 17001, max: null, rate: 0.0575 }
+    ]
+  },
+  'Washington': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  },
+  'Massachusetts': {
+    'single': [{ min: 0, max: null, rate: 0.05 }],
+    'married': [{ min: 0, max: null, rate: 0.05 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.05 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.05 }]
+  },
+  'Indiana': {
+    'single': [{ min: 0, max: null, rate: 0.0323 }],
+    'married': [{ min: 0, max: null, rate: 0.0323 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0323 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0323 }]
+  },
+  'Arizona': {
+    'single': [{ min: 0, max: null, rate: 0.025 }],
+    'married': [{ min: 0, max: null, rate: 0.025 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.025 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.025 }]
+  },
+  'Tennessee': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  },
+  'Missouri': {
+    'single': [
+      { min: 0, max: 1088, rate: 0.015 },
+      { min: 1089, max: 2176, rate: 0.02 },
+      { min: 2177, max: 3264, rate: 0.025 },
+      { min: 3265, max: 4352, rate: 0.03 },
+      { min: 4353, max: 5440, rate: 0.035 },
+      { min: 5441, max: 6528, rate: 0.04 },
+      { min: 6529, max: 7616, rate: 0.045 },
+      { min: 7617, max: 8704, rate: 0.05 },
+      { min: 8705, max: null, rate: 0.053 }
+    ],
+    'married': [
+      { min: 0, max: 1088, rate: 0.015 },
+      { min: 1089, max: 2176, rate: 0.02 },
+      { min: 2177, max: 3264, rate: 0.025 },
+      { min: 3265, max: 4352, rate: 0.03 },
+      { min: 4353, max: 5440, rate: 0.035 },
+      { min: 5441, max: 6528, rate: 0.04 },
+      { min: 6529, max: 7616, rate: 0.045 },
+      { min: 7617, max: 8704, rate: 0.05 },
+      { min: 8705, max: null, rate: 0.053 }
+    ],
+    'marriedSeparate': [
+      { min: 0, max: 1088, rate: 0.015 },
+      { min: 1089, max: 2176, rate: 0.02 },
+      { min: 2177, max: 3264, rate: 0.025 },
+      { min: 3265, max: 4352, rate: 0.03 },
+      { min: 4353, max: 5440, rate: 0.035 },
+      { min: 5441, max: 6528, rate: 0.04 },
+      { min: 6529, max: 7616, rate: 0.045 },
+      { min: 7617, max: 8704, rate: 0.05 },
+      { min: 8705, max: null, rate: 0.053 }
+    ],
+    'headOfHousehold': [
+      { min: 0, max: 1088, rate: 0.015 },
+      { min: 1089, max: 2176, rate: 0.02 },
+      { min: 2177, max: 3264, rate: 0.025 },
+      { min: 3265, max: 4352, rate: 0.03 },
+      { min: 4353, max: 5440, rate: 0.035 },
+      { min: 5441, max: 6528, rate: 0.04 },
+      { min: 6529, max: 7616, rate: 0.045 },
+      { min: 7617, max: 8704, rate: 0.05 },
+      { min: 8705, max: null, rate: 0.053 }
+    ]
+  },
+  'Maryland': {
+    'single': [
+      { min: 0, max: 1000, rate: 0.02 },
+      { min: 1001, max: 2000, rate: 0.03 },
+      { min: 2001, max: 3000, rate: 0.04 },
+      { min: 3001, max: 100000, rate: 0.0475 },
+      { min: 100001, max: 125000, rate: 0.05 },
+      { min: 125001, max: 150000, rate: 0.0525 },
+      { min: 150001, max: 250000, rate: 0.055 },
+      { min: 250001, max: null, rate: 0.0575 }
+    ],
+    'married': [
+      { min: 0, max: 1000, rate: 0.02 },
+      { min: 1001, max: 2000, rate: 0.03 },
+      { min: 2001, max: 3000, rate: 0.04 },
+      { min: 3001, max: 150000, rate: 0.0475 },
+      { min: 150001, max: 175000, rate: 0.05 },
+      { min: 175001, max: 225000, rate: 0.0525 },
+      { min: 225001, max: 300000, rate: 0.055 },
+      { min: 300001, max: null, rate: 0.0575 }
+    ],
+    'marriedSeparate': [
+      { min: 0, max: 1000, rate: 0.02 },
+      { min: 1001, max: 2000, rate: 0.03 },
+      { min: 2001, max: 3000, rate: 0.04 },
+      { min: 3001, max: 100000, rate: 0.0475 },
+      { min: 100001, max: 125000, rate: 0.05 },
+      { min: 125001, max: 150000, rate: 0.0525 },
+      { min: 150001, max: 250000, rate: 0.055 },
+      { min: 250001, max: null, rate: 0.0575 }
+    ],
+    'headOfHousehold': [
+      { min: 0, max: 1000, rate: 0.02 },
+      { min: 1001, max: 2000, rate: 0.03 },
+      { min: 2001, max: 3000, rate: 0.04 },
+      { min: 3001, max: 150000, rate: 0.0475 },
+      { min: 150001, max: 175000, rate: 0.05 },
+      { min: 175001, max: 225000, rate: 0.0525 },
+      { min: 225001, max: 300000, rate: 0.055 },
+      { min: 300001, max: null, rate: 0.0575 }
+    ]
+  },
+  'Wisconsin': {
+    'single': [{ min: 0, max: null, rate: 0.0465 }],
+    'married': [{ min: 0, max: null, rate: 0.0465 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0465 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0465 }]
+  },
+  'Minnesota': {
+    'single': [{ min: 0, max: null, rate: 0.0685 }],
+    'married': [{ min: 0, max: null, rate: 0.0685 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0685 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0685 }]
+  },
+  'Colorado': {
+    'single': [{ min: 0, max: null, rate: 0.044 }],
+    'married': [{ min: 0, max: null, rate: 0.044 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.044 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.044 }]
+  },
+  'Alabama': {
+    'single': [
+      { min: 0, max: 500, rate: 0.02 },
+      { min: 501, max: 3000, rate: 0.04 },
+      { min: 3001, max: null, rate: 0.05 }
+    ],
+    'married': [
+      { min: 0, max: 1000, rate: 0.02 },
+      { min: 1001, max: 6000, rate: 0.04 },
+      { min: 6001, max: null, rate: 0.05 }
+    ],
+    'marriedSeparate': [
+      { min: 0, max: 500, rate: 0.02 },
+      { min: 501, max: 3000, rate: 0.04 },
+      { min: 3001, max: null, rate: 0.05 }
+    ],
+    'headOfHousehold': [
+      { min: 0, max: 1000, rate: 0.02 },
+      { min: 1001, max: 6000, rate: 0.04 },
+      { min: 6001, max: null, rate: 0.05 }
+    ]
+  },
+  'South Carolina': {
+    'single': [{ min: 0, max: null, rate: 0.07 }],
+    'married': [{ min: 0, max: null, rate: 0.07 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.07 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.07 }]
+  },
+  'Louisiana': {
+    'single': [{ min: 0, max: null, rate: 0.0425 }],
+    'married': [{ min: 0, max: null, rate: 0.0425 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0425 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0425 }]
+  },
+  'Kentucky': {
+    'single': [{ min: 0, max: null, rate: 0.045 }],
+    'married': [{ min: 0, max: null, rate: 0.045 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.045 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.045 }]
+  },
+  'Oregon': {
+    'single': [{ min: 0, max: null, rate: 0.0875 }],
+    'married': [{ min: 0, max: null, rate: 0.0875 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0875 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0875 }]
+  },
+  'Oklahoma': {
+    'single': [{ min: 0, max: null, rate: 0.0475 }],
+    'married': [{ min: 0, max: null, rate: 0.0475 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0475 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0475 }]
+  },
+  'Connecticut': {
+    'single': [{ min: 0, max: null, rate: 0.065 }],
+    'married': [{ min: 0, max: null, rate: 0.065 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.065 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.065 }]
+  },
+  'Iowa': {
+    'single': [{ min: 0, max: null, rate: 0.0425 }],
+    'married': [{ min: 0, max: null, rate: 0.0425 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0425 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0425 }]
+  },
+  'Mississippi': {
+    'single': [{ min: 0, max: null, rate: 0.05 }],
+    'married': [{ min: 0, max: null, rate: 0.05 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.05 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.05 }]
+  },
+  'Arkansas': {
+    'single': [{ min: 0, max: null, rate: 0.049 }],
+    'married': [{ min: 0, max: null, rate: 0.049 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.049 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.049 }]
+  },
+  'Kansas': {
+    'single': [{ min: 0, max: null, rate: 0.0525 }],
+    'married': [{ min: 0, max: null, rate: 0.0525 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0525 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0525 }]
+  },
+  'Utah': {
+    'single': [{ min: 0, max: null, rate: 0.0485 }],
+    'married': [{ min: 0, max: null, rate: 0.0485 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0485 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0485 }]
+  },
+  'Nevada': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  },
+  'New Mexico': {
+    'single': [{ min: 0, max: null, rate: 0.059 }],
+    'married': [{ min: 0, max: null, rate: 0.059 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.059 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.059 }]
+  },
+  'Nebraska': {
+    'single': [{ min: 0, max: null, rate: 0.0664 }],
+    'married': [{ min: 0, max: null, rate: 0.0664 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0664 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0664 }]
+  },
+  'West Virginia': {
+    'single': [{ min: 0, max: null, rate: 0.065 }],
+    'married': [{ min: 0, max: null, rate: 0.065 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.065 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.065 }]
+  },
+  'Idaho': {
+    'single': [{ min: 0, max: null, rate: 0.06 }],
+    'married': [{ min: 0, max: null, rate: 0.06 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.06 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.06 }]
+  },
+  'Hawaii': {
+    'single': [{ min: 0, max: null, rate: 0.11 }],
+    'married': [{ min: 0, max: null, rate: 0.11 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.11 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.11 }]
+  },
+  'Maine': {
+    'single': [{ min: 0, max: null, rate: 0.0715 }],
+    'married': [{ min: 0, max: null, rate: 0.0715 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0715 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0715 }]
+  },
+  'New Hampshire': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  },
+  'Rhode Island': {
+    'single': [{ min: 0, max: null, rate: 0.0599 }],
+    'married': [{ min: 0, max: null, rate: 0.0599 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0599 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0599 }]
+  },
+  'Montana': {
+    'single': [{ min: 0, max: null, rate: 0.0675 }],
+    'married': [{ min: 0, max: null, rate: 0.0675 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0675 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0675 }]
+  },
+  'Delaware': {
+    'single': [{ min: 0, max: null, rate: 0.066 }],
+    'married': [{ min: 0, max: null, rate: 0.066 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.066 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.066 }]
+  },
+  'South Dakota': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  },
+  'North Dakota': {
+    'single': [{ min: 0, max: null, rate: 0.029 }],
+    'married': [{ min: 0, max: null, rate: 0.029 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.029 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.029 }]
+  },
+  'Alaska': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  },
+  'Vermont': {
+    'single': [{ min: 0, max: null, rate: 0.0875 }],
+    'married': [{ min: 0, max: null, rate: 0.0875 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0.0875 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0.0875 }]
+  },
+  'Wyoming': {
+    'single': [{ min: 0, max: null, rate: 0 }],
+    'married': [{ min: 0, max: null, rate: 0 }],
+    'marriedSeparate': [{ min: 0, max: null, rate: 0 }],
+    'headOfHousehold': [{ min: 0, max: null, rate: 0 }]
+  }
+};
+
+// Export the constants for use in other modules
+export const STATE_STANDARD_DEDUCTIONS = stateStandardDeductions;
+export const STATE_TAX_BRACKETS = stateTaxBrackets;
+
+// Function to calculate state taxes
+export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | null {
+  const { income, filingStatus, deductions, useStandardDeduction, state, selectedDeductions = [] } = inputs;
+  
+  // Return null if the state has no income tax
+  if (!stateTaxBrackets[state]) {
+    return null;
+  }
+  
+  // Calculate the total amount from selected deductions
+  const selectedDeductionsTotal = selectedDeductions.reduce((sum, deduction) => sum + deduction.amount, 0);
+  
+  // Get standard deduction for the state
+  const standardDeduction = stateStandardDeductions[state][filingStatus] || 0;
+  
+  // Determine which deduction to use
+  const totalItemizedDeduction = deductions + selectedDeductionsTotal;
+  const deductionAmount = useStandardDeduction ? standardDeduction : totalItemizedDeduction;
+  
+  // Calculate taxable income
+  const taxableIncome = Math.max(0, income - deductionAmount);
+  
+  // Get tax brackets for the state and filing status
+  const brackets = stateTaxBrackets[state][filingStatus];
+  
+  // Calculate tax amount
+  let taxAmount = 0;
+  let lastBracketUsed = brackets[0];
+  const bracketBreakdown: Array<{
+    rate: number;
+    amount: number;
+    rangeStart: number;
+    rangeEnd: number;
+  }> = [];
+  
+  for (const bracket of brackets) {
+    if (taxableIncome > bracket.min) {
+      const taxableInThisBracket = Math.min(taxableIncome, bracket.max !== null ? bracket.max : Infinity) - bracket.min;
+      const taxAmountForBracket = taxableInThisBracket * bracket.rate;
+      taxAmount += taxAmountForBracket;
+      lastBracketUsed = bracket;
+      
+      if (taxableInThisBracket > 0) {
+        bracketBreakdown.push({
+          rate: bracket.rate,
+          amount: taxAmountForBracket,
+          rangeStart: bracket.min,
+          rangeEnd: bracket.max !== null ? Math.min(taxableIncome, bracket.max) : taxableIncome
+        });
+      }
+    }
+  }
+  
+  // Calculate effective tax rate
+  const effectiveRate = taxableIncome > 0 ? taxAmount / taxableIncome : 0;
+  
+  return {
+    taxableIncome,
+    taxAmount,
+    effectiveRate,
+    marginRate: lastBracketUsed.rate,
+    filingStatus,
+    standardDeduction,
+    brackets,
+    selectedDeductionsTotal,
+    bracketBreakdown
+  };
+}
