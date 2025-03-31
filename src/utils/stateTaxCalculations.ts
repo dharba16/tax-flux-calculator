@@ -594,4 +594,4 @@ const stateTaxBrackets: Record<string, Record<FilingStatus, TaxBracket[]>> = {
       { min: 501, max: 1500, rate: 0.02 },
       { min: 1501, max: 2500, rate: 0.03 },
       { min: 2501, max: 3500, rate: 0.04 },
-      { min: 3501, max
+      { min: 3501, max: null,
