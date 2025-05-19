@@ -18,6 +18,9 @@ export interface StateTaxResults {
     rangeEnd: number;
   }>;
   taxLiability?: number; // Add this to match what's used in components
+  effectiveTaxRate: number; // Add these fields to match TaxResults
+  refundOrOwed: number;
+  deductionAmount: number;
 }
 
 export interface StateTaxInputs {
@@ -95,332 +98,12 @@ const stateStandardDeductions: Record<string, Record<FilingStatus, number>> = {
     'qualifiedWidow': 9800
   },
   'Georgia': {
-    'single': [
-      { min: 0, max: 7000, rate: 0.01 },
-      { min: 7001, max: 14000, rate: 0.02 },
-      { min: 14001, max: 21000, rate: 0.03 },
-      { min: 21001, max: 28000, rate: 0.04 },
-      { min: 28001, max: null, rate: 0.0575 }
-    ],
-    'married': [
-      { min: 0, max: 1000, rate: 0.01 },
-      { min: 1001, max: 3000, rate: 0.02 },
-      { min: 3001, max: 5000, rate: 0.03 },
-      { min: 5001, max: 7000, rate: 0.04 },
-      { min: 7001, max: 10000, rate: 0.05 },
-      { min: 10001, max: null, rate: 0.0575 }
-    ],
-    'marriedSeparate': [
-      { min: 0, max: 500, rate: 0.01 },
-      { min: 501, max: 1500, rate: 0.02 },
-      { min: 1501, max: 2500, rate: 0.03 },
-      { min: 2501, max: 3500, rate: 0.04 },
-      { min: 3501, max: 5000, rate: 0.05 },
-      { min: 5001, max: null, rate: 0.0575 }
-    ],
-    'headOfHousehold': [
-      { min: 0, max: 7000, rate: 0.01 },
-      { min: 7001, max: 14000, rate: 0.02 },
-      { min: 14001, max: 21000, rate: 0.03 },
-      { min: 21001, max: 28000, rate: 0.04 },
-      { min: 28001, max: null, rate: 0.0575 }
-    ],
-    'qualifiedWidow': [
-      { min: 0, max: 1000, rate: 0.01 },
-      { min: 1001, max: 3000, rate: 0.02 },
-      { min: 3001, max: 5000, rate: 0.03 },
-      { min: 5001, max: 7000, rate: 0.04 },
-      { min: 7001, max: 10000, rate: 0.05 },
-      { min: 10001, max: null, rate: 0.0575 }
-    ]
+    'single': 5400,
+    'married': 7100,
+    'marriedSeparate': 3550,
+    'headOfHousehold': 7100,
+    'qualifiedWidow': 7100
   },
-  'North Carolina': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'New Jersey': {
-    'single': 3000,
-    'married': 6000,
-    'marriedSeparate': 3000,
-    'headOfHousehold': 4500,
-    'qualifiedWidow': 6000
-  },
-  'Virginia': {
-    'single': 4500,
-    'married': 9000,
-    'marriedSeparate': 4500,
-    'headOfHousehold': 4500,
-    'qualifiedWidow': 9000
-  },
-  'Washington': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  },
-  'Massachusetts': {
-    'single': 3600,
-    'married': 7200,
-    'marriedSeparate': 3600,
-    'headOfHousehold': 5600,
-    'qualifiedWidow': 7200
-  },
-  'Indiana': {
-    'single': 1000,
-    'married': 2000,
-    'marriedSeparate': 1000,
-    'headOfHousehold': 1000,
-    'qualifiedWidow': 2000
-  },
-  'Arizona': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Tennessee': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  },
-  'Missouri': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Maryland': {
-    'single': 2300,
-    'married': 4600,
-    'marriedSeparate': 2300,
-    'headOfHousehold': 2300,
-    'qualifiedWidow': 4600
-  },
-  'Wisconsin': {
-    'single': 11130,
-    'married': 20760,
-    'marriedSeparate': 10380,
-    'headOfHousehold': 14470,
-    'qualifiedWidow': 20760
-  },
-  'Minnesota': {
-    'single': 12750,
-    'married': 25500,
-    'marriedSeparate': 12750,
-    'headOfHousehold': 19200,
-    'qualifiedWidow': 25500
-  },
-  'Colorado': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Alabama': {
-    'single': 2500,
-    'married': 7500,
-    'marriedSeparate': 3750,
-    'headOfHousehold': 4700,
-    'qualifiedWidow': 7500
-  },
-  'South Carolina': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Louisiana': {
-    'single': 4500,
-    'married': 9000,
-    'marriedSeparate': 4500,
-    'headOfHousehold': 9000,
-    'qualifiedWidow': 9000
-  },
-  'Kentucky': {
-    'single': 2690,
-    'married': 5380,
-    'marriedSeparate': 2690,
-    'headOfHousehold': 2690,
-    'qualifiedWidow': 5380
-  },
-  'Oregon': {
-    'single': 2270,
-    'married': 4545,
-    'marriedSeparate': 2270,
-    'headOfHousehold': 3655,
-    'qualifiedWidow': 4545
-  },
-  'Oklahoma': {
-    'single': 6350,
-    'married': 12700,
-    'marriedSeparate': 6350,
-    'headOfHousehold': 9350,
-    'qualifiedWidow': 12700
-  },
-  'Connecticut': {
-    'single': 15000,
-    'married': 24000,
-    'marriedSeparate': 12000,
-    'headOfHousehold': 19000,
-    'qualifiedWidow': 24000
-  },
-  'Iowa': {
-    'single': 2110,
-    'married': 5210,
-    'marriedSeparate': 2110,
-    'headOfHousehold': 5210,
-    'qualifiedWidow': 5210
-  },
-  'Mississippi': {
-    'single': 6000,
-    'married': 12000,
-    'marriedSeparate': 6000,
-    'headOfHousehold': 8000,
-    'qualifiedWidow': 12000
-  },
-  'Arkansas': {
-    'single': 2200,
-    'married': 4400,
-    'marriedSeparate': 2200,
-    'headOfHousehold': 3200,
-    'qualifiedWidow': 4400
-  },
-  'Kansas': {
-    'single': 3000,
-    'married': 7500,
-    'marriedSeparate': 3750,
-    'headOfHousehold': 5500,
-    'qualifiedWidow': 7500
-  },
-  'Utah': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Nevada': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  },
-  'New Mexico': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Nebraska': {
-    'single': 6900,
-    'married': 13800,
-    'marriedSeparate': 6900,
-    'headOfHousehold': 10100,
-    'qualifiedWidow': 13800
-  },
-  'West Virginia': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Idaho': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Hawaii': {
-    'single': 2200,
-    'married': 4400,
-    'marriedSeparate': 2200,
-    'headOfHousehold': 3212,
-    'qualifiedWidow': 4400
-  },
-  'Maine': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'New Hampshire': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  },
-  'Rhode Island': {
-    'single': 8900,
-    'married': 17800,
-    'marriedSeparate': 8900,
-    'headOfHousehold': 13850,
-    'qualifiedWidow': 17800
-  },
-  'Montana': {
-    'single': 4790,
-    'married': 9580,
-    'marriedSeparate': 4790,
-    'headOfHousehold': 4790,
-    'qualifiedWidow': 9580
-  },
-  'Delaware': {
-    'single': 3250,
-    'married': 6500,
-    'marriedSeparate': 3250,
-    'headOfHousehold': 3250,
-    'qualifiedWidow': 6500
-  },
-  'South Dakota': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  },
-  'North Dakota': {
-    'single': 12200,
-    'married': 24400,
-    'marriedSeparate': 12200,
-    'headOfHousehold': 18350,
-    'qualifiedWidow': 24400
-  },
-  'Alaska': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  },
-  'Vermont': {
-    'single': 6150,
-    'married': 12300,
-    'marriedSeparate': 6150,
-    'headOfHousehold': 9650,
-    'qualifiedWidow': 12300
-  },
-  'Wyoming': {
-    'single': 0,
-    'married': 0,
-    'marriedSeparate': 0,
-    'headOfHousehold': 0,
-    'qualifiedWidow': 0
-  }
 };
 
 // State tax brackets
@@ -645,12 +328,12 @@ const stateTaxBrackets: Record<string, Record<FilingStatus, TaxBracket[]>> = {
       { min: 7001, max: 10000, rate: 0.05 },
       { min: 10001, max: null, rate: 0.0575 }
     ]
-  }
+  },
 };
 
 // Calculate state taxes based on provided inputs
 export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | null {
-  const { income, filingStatus, state, deductions, useStandardDeduction, selectedDeductions = [] } = inputs;
+  const { income, filingStatus, state, deductions, useStandardDeduction, withholding = 0, selectedDeductions = [] } = inputs;
   
   // Check if state has tax brackets
   if (!stateTaxBrackets[state]) {
@@ -710,24 +393,30 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
   // Calculate effective tax rate
   const effectiveRate = taxableIncome > 0 ? taxAmount / taxableIncome : 0;
   
+  // Calculate refund or amount owed
+  const refundOrOwed = withholding - taxAmount;
+  
   return {
     taxableIncome,
     taxAmount,
     effectiveRate,
+    effectiveTaxRate: effectiveRate, // Match TaxResults property name
     marginRate,
     filingStatus,
     standardDeduction,
     brackets,
     selectedDeductionsTotal,
     bracketBreakdown,
-    taxLiability: taxAmount
+    taxLiability: taxAmount,
+    refundOrOwed,
+    deductionAmount
   };
 }
 
 /**
  * Get state-specific deduction information
  */
-export function getStateDeductionInfo(state: string, income: number): DeductionInfo[] {
+export function getStateDeductionInfo(income: number, filingStatus: FilingStatus, state: string): DeductionInfo[] {
   // This is a simplified version, in a real app this would be more comprehensive
   // and would check specific state eligibility rules
   

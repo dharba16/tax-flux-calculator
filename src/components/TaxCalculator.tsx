@@ -225,7 +225,7 @@ const TaxCalculator: React.FC = () => {
       });
       
       if (stateResult) {
-        setStateResults(stateResult as TaxResults);
+        setStateResults(stateResult);
 
         const stateDeductionsList = getStateEligibleDeductions(income, filingStatus, selectedState);
         setStateEligibleDeductions(stateDeductionsList);
