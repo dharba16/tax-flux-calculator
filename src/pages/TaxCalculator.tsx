@@ -1,9 +1,68 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import TaxCalculator from '@/components/TaxCalculator';
 import Navigation from '@/components/Navigation';
+import { Card, CardContent, CardHeader, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { User, LogIn, UserPlus } from 'lucide-react';
+import { authService, User as AuthUser } from '@/services/authService';
+import { toast } from 'sonner';
 
 const TaxCalculatorPage = () => {
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [isSignup, setIsSignup] = useState(false);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const currentUser = authService.getCurrentUser();
+    setUser(currentUser);
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const loggedInUser = authService.login(email, password);
+      setUser(loggedInUser);
+      setEmail('');
+      setPassword('');
+      toast.success('Successfully logged in!');
+    } catch (error) {
+      toast.error('Login failed. Please check your credentials.');
+    }
+  };
+
+  const handleSignup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    
+    try {
+      const newUser = authService.signup(email, password, name);
+      setUser(newUser);
+      setEmail('');
+      setPassword('');
+      setName('');
+      setIsSignup(false);
+      toast.success('Account created successfully!');
+    } catch (error) {
+      toast.error('Signup failed. This email might already be in use.');
+    }
+  };
+
+  const handleLogout = () => {
+    authService.logout();
+    setUser(null);
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
       <header className="py-6 border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
@@ -16,7 +75,7 @@ const TaxCalculatorPage = () => {
                 className="h-16 sm:h-20 alchemist-logo"
               />
             </div>
-            <Navigation hideAuth={true} />
+            <Navigation hideAuth={false} />
           </div>
         </div>
       </header>
@@ -31,7 +90,103 @@ const TaxCalculatorPage = () => {
             Now with support for all major filing statuses and selectable tax deductions.
           </p>
           <div className="animate-fade-in max-w-5xl mx-auto">
-            <TaxCalculator />
+            {user ? (
+              <TaxCalculator />
+            ) : (
+              <Card className="max-w-md mx-auto">
+                <CardHeader>
+                  <CardTitle>{isSignup ? 'Create an Account' : 'Login to Access Calculator'}</CardTitle>
+                  <CardDescription>
+                    {isSignup 
+                      ? 'Sign up to save tax scenarios and get personalized recommendations' 
+                      : 'Login to access the tax calculator and manage your tax scenarios'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isSignup ? (
+                    <form onSubmit={handleSignup} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input 
+                          id="name" 
+                          type="text" 
+                          value={name} 
+                          onChange={(e) => setName(e.target.value)} 
+                          placeholder="Your name"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          value={email} 
+                          onChange={(e) => setEmail(e.target.value)} 
+                          placeholder="you@example.com"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          value={password} 
+                          onChange={(e) => setPassword(e.target.value)} 
+                          placeholder="••••••••"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Sign Up
+                      </Button>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input 
+                          id="email" 
+                          type="email" 
+                          value={email} 
+                          onChange={(e) => setEmail(e.target.value)} 
+                          placeholder="you@example.com"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password">Password</Label>
+                        <Input 
+                          id="password" 
+                          type="password" 
+                          value={password} 
+                          onChange={(e) => setPassword(e.target.value)} 
+                          placeholder="••••••••"
+                          required
+                        />
+                      </div>
+                      <Button type="submit" className="w-full">
+                        <LogIn className="h-4 w-4 mr-2" />
+                        Login
+                      </Button>
+                    </form>
+                  )}
+                </CardContent>
+                <CardFooter className="flex flex-col">
+                  <Button 
+                    variant="link" 
+                    className="px-0" 
+                    onClick={() => setIsSignup(!isSignup)}
+                  >
+                    {isSignup
+                      ? 'Already have an account? Login'
+                      : "Don't have an account? Sign up"}
+                  </Button>
+                </CardFooter>
+              </Card>
+            )}
           </div>
         </div>
       </main>

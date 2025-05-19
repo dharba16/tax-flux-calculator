@@ -11,17 +11,18 @@ export interface StateTaxResults {
   standardDeduction: number;
   brackets: TaxBracket[];
   selectedDeductionsTotal: number;
+  taxLiability: number; // Make this required, not optional
   bracketBreakdown?: Array<{
     rate: number;
     amount: number;
     rangeStart: number;
     rangeEnd: number;
   }>;
-  taxLiability?: number; // Add this to match what's used in components
-  effectiveTaxRate: number; // Add these fields to match TaxResults
+  // Match all TaxResults properties
+  effectiveTaxRate: number;
   refundOrOwed: number;
   deductionAmount: number;
-  marginalRate: number; // Add this field to match TaxResults
+  marginalRate: number;
 }
 
 export interface StateTaxInputs {
@@ -332,61 +333,57 @@ const stateTaxBrackets: Record<string, Record<FilingStatus, TaxBracket[]>> = {
   },
 };
 
-// Calculate state taxes based on provided inputs
-export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | null {
-  const { income, filingStatus, state, deductions, useStandardDeduction, withholding = 0, selectedDeductions = [] } = inputs;
+// Calculate state taxes
+export const calculateStateTaxes = (inputs: StateTaxInputs): StateTaxResults | null => {
+  const { income, filingStatus, deductions, useStandardDeduction, state, withholding = 0, selectedDeductions = [] } = inputs;
   
-  // Check if state has tax brackets
-  if (!stateTaxBrackets[state]) {
+  // If state has no income tax
+  if (!stateTaxBrackets[state] || !stateStandardDeductions[state]) {
     return null;
   }
-  
-  // Get state-specific tax brackets
+
   const brackets = stateTaxBrackets[state][filingStatus];
-  
-  // Calculate the total amount from selected deductions
-  const selectedDeductionsTotal = selectedDeductions.reduce((sum, deduction) => sum + deduction.amount, 0);
-  
-  // Determine the standard deduction amount for the state
   const standardDeduction = stateStandardDeductions[state][filingStatus];
   
-  // Use the greater of standard or itemized deductions if standard deduction is used
-  const deductionAmount = useStandardDeduction 
-    ? standardDeduction 
-    : deductions + selectedDeductionsTotal;
+  // Calculate deduction amount
+  let deductionAmount = useStandardDeduction ? standardDeduction : deductions;
+  
+  // Add selected deductions
+  const selectedDeductionsTotal = selectedDeductions.reduce((total, deduction) => total + deduction.amount, 0);
+  deductionAmount += selectedDeductionsTotal;
   
   // Calculate taxable income
   const taxableIncome = Math.max(0, income - deductionAmount);
   
-  // Initialize tax amount and bracket breakdown
+  // Calculate tax amount
   let taxAmount = 0;
-  let marginRate = brackets[0].rate; // Default to lowest bracket
-  const bracketBreakdown: Array<{
-    rate: number;
-    amount: number;
-    rangeStart: number;
-    rangeEnd: number;
-  }> = [];
+  let bracketBreakdown: Array<{rate: number; amount: number; rangeStart: number; rangeEnd: number}> = [];
+  let marginRate = 0;
   
-  // Calculate tax amount based on brackets
-  for (const bracket of brackets) {
-    if (taxableIncome > bracket.min) {
-      const taxableInThisBracket = Math.min(
-        taxableIncome, 
-        bracket.max !== null ? bracket.max : Infinity
-      ) - bracket.min;
+  for (let i = 0; i < brackets.length; i++) {
+    const bracket = brackets[i];
+    const nextBracket = brackets[i + 1];
+    
+    const rangeStart = bracket.min;
+    const rangeEnd = bracket.max !== null ? bracket.max : Infinity;
+    const rate = bracket.rate;
+    
+    if (taxableIncome > rangeStart) {
+      const taxableAmountInBracket = Math.min(taxableIncome, rangeEnd) - rangeStart;
+      const taxForBracket = taxableAmountInBracket * rate;
       
-      const taxAmountForBracket = taxableInThisBracket * bracket.rate;
-      taxAmount += taxAmountForBracket;
-      marginRate = bracket.rate;
+      taxAmount += taxForBracket;
       
-      if (taxableInThisBracket > 0) {
-        bracketBreakdown.push({
-          rate: bracket.rate,
-          amount: taxAmountForBracket,
-          rangeStart: bracket.min,
-          rangeEnd: Math.min(taxableIncome, bracket.max !== null ? bracket.max : Infinity)
-        });
+      bracketBreakdown.push({
+        rate,
+        amount: taxForBracket,
+        rangeStart,
+        rangeEnd
+      });
+      
+      // Set marginal tax rate based on highest applicable bracket
+      if (taxableIncome >= rangeStart) {
+        marginRate = rate;
       }
     }
   }
@@ -394,7 +391,7 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
   // Calculate effective tax rate
   const effectiveRate = taxableIncome > 0 ? taxAmount / taxableIncome : 0;
   
-  // Calculate refund or amount owed
+  // Calculate refund or owed amount
   const refundOrOwed = withholding - taxAmount;
   
   return {
@@ -403,73 +400,56 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
     effectiveRate,
     effectiveTaxRate: effectiveRate, // Match TaxResults property name
     marginRate,
-    marginalRate: marginRate, // Add this to match TaxResults property
+    marginalRate: marginRate, // Match TaxResults property name
     filingStatus,
     standardDeduction,
     brackets,
     selectedDeductionsTotal,
     bracketBreakdown,
-    taxLiability: taxAmount,
+    taxLiability: taxAmount, // Add taxLiability field to match TaxResults
     refundOrOwed,
     deductionAmount
   };
-}
+};
 
 /**
  * Get state-specific deduction information
  */
-export function getStateDeductionInfo(income: number, filingStatus: FilingStatus, state: string): DeductionInfo[] {
-  // This is a simplified version, in a real app this would be more comprehensive
-  // and would check specific state eligibility rules
-  
-  const deductions: DeductionInfo[] = [];
-  
-  // Only add deductions for states that have income tax
-  if (!stateTaxBrackets[state] || stateTaxBrackets[state].single[0].rate === 0) {
+export const getStateDeductionInfo = (income: number, filingStatus: FilingStatus, state: string): DeductionInfo[] => {
+  // Return empty array for states with no income tax
+  if (!stateTaxBrackets[state] || !stateTaxBrackets[state][filingStatus]) {
     return [];
   }
   
-  // Add some standard deductions that exist in most states
-  deductions.push({
-    id: "state_mortgage_interest",
-    name: "Mortgage Interest",
-    description: "Deduction for home mortgage interest",
-    icon: "home",
-    eligibleAmount: income * 0.10, // Simplified calculation
-    eligibilityMessage: "Most states that have income tax allow mortgage interest deductions."
-  });
+  // Otherwise, return state-specific deductions
+  // This is a simplified example - real implementation would have state-specific logic
+  const deductions: DeductionInfo[] = [
+    {
+      id: `${state.toLowerCase()}-property-tax`,
+      name: `${state} Property Tax`,
+      description: `Deduction for property taxes paid in ${state}`,
+      eligibleAmount: income * 0.02,
+      category: 'property'
+    },
+    {
+      id: `${state.toLowerCase()}-education`,
+      name: `${state} Education Expenses`,
+      description: `Deduction for education expenses in ${state}`,
+      eligibleAmount: income * 0.01,
+      category: 'education'
+    }
+  ];
   
-  deductions.push({
-    id: "state_charitable",
-    name: "Charitable Contributions",
-    description: "Deduction for charitable donations",
-    icon: "heart-pulse",
-    eligibleAmount: income * 0.03, // Simplified calculation
-    eligibilityMessage: "Charitable contributions are often deductible on state taxes."
-  });
-  
-  // Add state-specific deductions
-  if (state === "California") {
+  // For high-tax states, add additional deductions
+  if (['California', 'New York', 'New Jersey', 'Massachusetts'].includes(state)) {
     deductions.push({
-      id: "ca_college_access",
-      name: "College Access Tax Credit",
-      description: "Tax credit for contributions to Cal Grants",
-      icon: "graduation-cap",
-      eligibleAmount: income * 0.02, // Simplified calculation
-      eligibilityMessage: "California offers credits for contributions to the College Access Tax Credit Fund."
-    });
-  }
-  
-  if (state === "New York") {
-    deductions.push({
-      id: "ny_college_tuition",
-      name: "College Tuition Credit",
-      description: "Credit for qualified college tuition expenses",
-      icon: "graduation-cap",
-      eligibleAmount: 1000, // Fixed amount
-      eligibilityMessage: "New York offers a credit for qualified college tuition expenses up to $10,000."
+      id: `${state.toLowerCase()}-commuter`,
+      name: `${state} Commuter Benefits`,
+      description: `Deduction for commuting expenses in ${state}`,
+      eligibleAmount: 2500,
+      category: 'travel'
     });
   }
   
   return deductions;
-}
+};
