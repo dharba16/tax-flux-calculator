@@ -21,6 +21,7 @@ export interface StateTaxResults {
   effectiveTaxRate: number; // Add these fields to match TaxResults
   refundOrOwed: number;
   deductionAmount: number;
+  marginalRate: number; // Add this field to match TaxResults
 }
 
 export interface StateTaxInputs {
@@ -402,6 +403,7 @@ export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | n
     effectiveRate,
     effectiveTaxRate: effectiveRate, // Match TaxResults property name
     marginRate,
+    marginalRate: marginRate, // Add this to match TaxResults property
     filingStatus,
     standardDeduction,
     brackets,
