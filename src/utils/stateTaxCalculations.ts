@@ -1,3 +1,4 @@
+
 import { FilingStatus } from './taxCalculations';
 import { DeductionInfo } from './deductionEligibility';
 
@@ -11,14 +12,14 @@ export interface StateTaxResults {
   standardDeduction: number;
   brackets: TaxBracket[];
   selectedDeductionsTotal: number;
-  taxLiability: number; // Make this required, not optional
+  taxLiability: number; 
   bracketBreakdown?: Array<{
     rate: number;
     amount: number;
     rangeStart: number;
     rangeEnd: number;
   }>;
-  // Match all TaxResults properties
+  // These properties are required for type compatibility with TaxResults
   effectiveTaxRate: number;
   refundOrOwed: number;
   deductionAmount: number;
@@ -429,14 +430,16 @@ export const getStateDeductionInfo = (income: number, filingStatus: FilingStatus
       name: `${state} Property Tax`,
       description: `Deduction for property taxes paid in ${state}`,
       eligibleAmount: income * 0.02,
-      category: 'property'
+      eligibilityMessage: `You may be eligible for property tax deductions in ${state}.`,
+      icon: 'home'
     },
     {
       id: `${state.toLowerCase()}-education`,
       name: `${state} Education Expenses`,
       description: `Deduction for education expenses in ${state}`,
       eligibleAmount: income * 0.01,
-      category: 'education'
+      eligibilityMessage: `You may be eligible for education expense deductions in ${state}.`,
+      icon: 'graduation-cap'
     }
   ];
   
@@ -447,7 +450,8 @@ export const getStateDeductionInfo = (income: number, filingStatus: FilingStatus
       name: `${state} Commuter Benefits`,
       description: `Deduction for commuting expenses in ${state}`,
       eligibleAmount: 2500,
-      category: 'travel'
+      eligibilityMessage: `Residents of ${state} may qualify for commuter benefit deductions.`,
+      icon: 'globe'
     });
   }
   
