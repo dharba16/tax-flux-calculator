@@ -95,11 +95,44 @@ const stateStandardDeductions: Record<string, Record<FilingStatus, number>> = {
     'qualifiedWidow': 9800
   },
   'Georgia': {
-    'single': 5400,
-    'married': 7100,
-    'marriedSeparate': 3550,
-    'headOfHousehold': 7100,
-    'qualifiedWidow': 7100
+    'single': [
+      { min: 0, max: 7000, rate: 0.01 },
+      { min: 7001, max: 14000, rate: 0.02 },
+      { min: 14001, max: 21000, rate: 0.03 },
+      { min: 21001, max: 28000, rate: 0.04 },
+      { min: 28001, max: null, rate: 0.0575 }
+    ],
+    'married': [
+      { min: 0, max: 1000, rate: 0.01 },
+      { min: 1001, max: 3000, rate: 0.02 },
+      { min: 3001, max: 5000, rate: 0.03 },
+      { min: 5001, max: 7000, rate: 0.04 },
+      { min: 7001, max: 10000, rate: 0.05 },
+      { min: 10001, max: null, rate: 0.0575 }
+    ],
+    'marriedSeparate': [
+      { min: 0, max: 500, rate: 0.01 },
+      { min: 501, max: 1500, rate: 0.02 },
+      { min: 1501, max: 2500, rate: 0.03 },
+      { min: 2501, max: 3500, rate: 0.04 },
+      { min: 3501, max: 5000, rate: 0.05 },
+      { min: 5001, max: null, rate: 0.0575 }
+    ],
+    'headOfHousehold': [
+      { min: 0, max: 7000, rate: 0.01 },
+      { min: 7001, max: 14000, rate: 0.02 },
+      { min: 14001, max: 21000, rate: 0.03 },
+      { min: 21001, max: 28000, rate: 0.04 },
+      { min: 28001, max: null, rate: 0.0575 }
+    ],
+    'qualifiedWidow': [
+      { min: 0, max: 1000, rate: 0.01 },
+      { min: 1001, max: 3000, rate: 0.02 },
+      { min: 3001, max: 5000, rate: 0.03 },
+      { min: 5001, max: 7000, rate: 0.04 },
+      { min: 7001, max: 10000, rate: 0.05 },
+      { min: 10001, max: null, rate: 0.0575 }
+    ]
   },
   'North Carolina': {
     'single': 12200,
@@ -594,4 +627,158 @@ const stateTaxBrackets: Record<string, Record<FilingStatus, TaxBracket[]>> = {
       { min: 501, max: 1500, rate: 0.02 },
       { min: 1501, max: 2500, rate: 0.03 },
       { min: 2501, max: 3500, rate: 0.04 },
-      { min: 3501, max: 5
+      { min: 3501, max: 5000, rate: 0.05 },
+      { min: 5001, max: null, rate: 0.0575 }
+    ],
+    'headOfHousehold': [
+      { min: 0, max: 7000, rate: 0.01 },
+      { min: 7001, max: 14000, rate: 0.02 },
+      { min: 14001, max: 21000, rate: 0.03 },
+      { min: 21001, max: 28000, rate: 0.04 },
+      { min: 28001, max: null, rate: 0.0575 }
+    ],
+    'qualifiedWidow': [
+      { min: 0, max: 1000, rate: 0.01 },
+      { min: 1001, max: 3000, rate: 0.02 },
+      { min: 3001, max: 5000, rate: 0.03 },
+      { min: 5001, max: 7000, rate: 0.04 },
+      { min: 7001, max: 10000, rate: 0.05 },
+      { min: 10001, max: null, rate: 0.0575 }
+    ]
+  }
+};
+
+// Calculate state taxes based on provided inputs
+export function calculateStateTaxes(inputs: StateTaxInputs): StateTaxResults | null {
+  const { income, filingStatus, state, deductions, useStandardDeduction, selectedDeductions = [] } = inputs;
+  
+  // Check if state has tax brackets
+  if (!stateTaxBrackets[state]) {
+    return null;
+  }
+  
+  // Get state-specific tax brackets
+  const brackets = stateTaxBrackets[state][filingStatus];
+  
+  // Calculate the total amount from selected deductions
+  const selectedDeductionsTotal = selectedDeductions.reduce((sum, deduction) => sum + deduction.amount, 0);
+  
+  // Determine the standard deduction amount for the state
+  const standardDeduction = stateStandardDeductions[state][filingStatus];
+  
+  // Use the greater of standard or itemized deductions if standard deduction is used
+  const deductionAmount = useStandardDeduction 
+    ? standardDeduction 
+    : deductions + selectedDeductionsTotal;
+  
+  // Calculate taxable income
+  const taxableIncome = Math.max(0, income - deductionAmount);
+  
+  // Initialize tax amount and bracket breakdown
+  let taxAmount = 0;
+  let marginRate = brackets[0].rate; // Default to lowest bracket
+  const bracketBreakdown: Array<{
+    rate: number;
+    amount: number;
+    rangeStart: number;
+    rangeEnd: number;
+  }> = [];
+  
+  // Calculate tax amount based on brackets
+  for (const bracket of brackets) {
+    if (taxableIncome > bracket.min) {
+      const taxableInThisBracket = Math.min(
+        taxableIncome, 
+        bracket.max !== null ? bracket.max : Infinity
+      ) - bracket.min;
+      
+      const taxAmountForBracket = taxableInThisBracket * bracket.rate;
+      taxAmount += taxAmountForBracket;
+      marginRate = bracket.rate;
+      
+      if (taxableInThisBracket > 0) {
+        bracketBreakdown.push({
+          rate: bracket.rate,
+          amount: taxAmountForBracket,
+          rangeStart: bracket.min,
+          rangeEnd: Math.min(taxableIncome, bracket.max !== null ? bracket.max : Infinity)
+        });
+      }
+    }
+  }
+  
+  // Calculate effective tax rate
+  const effectiveRate = taxableIncome > 0 ? taxAmount / taxableIncome : 0;
+  
+  return {
+    taxableIncome,
+    taxAmount,
+    effectiveRate,
+    marginRate,
+    filingStatus,
+    standardDeduction,
+    brackets,
+    selectedDeductionsTotal,
+    bracketBreakdown,
+    taxLiability: taxAmount
+  };
+}
+
+/**
+ * Get state-specific deduction information
+ */
+export function getStateDeductionInfo(state: string, income: number): DeductionInfo[] {
+  // This is a simplified version, in a real app this would be more comprehensive
+  // and would check specific state eligibility rules
+  
+  const deductions: DeductionInfo[] = [];
+  
+  // Only add deductions for states that have income tax
+  if (!stateTaxBrackets[state] || stateTaxBrackets[state].single[0].rate === 0) {
+    return [];
+  }
+  
+  // Add some standard deductions that exist in most states
+  deductions.push({
+    id: "state_mortgage_interest",
+    name: "Mortgage Interest",
+    description: "Deduction for home mortgage interest",
+    icon: "home",
+    eligibleAmount: income * 0.10, // Simplified calculation
+    eligibilityMessage: "Most states that have income tax allow mortgage interest deductions."
+  });
+  
+  deductions.push({
+    id: "state_charitable",
+    name: "Charitable Contributions",
+    description: "Deduction for charitable donations",
+    icon: "heart-pulse",
+    eligibleAmount: income * 0.03, // Simplified calculation
+    eligibilityMessage: "Charitable contributions are often deductible on state taxes."
+  });
+  
+  // Add state-specific deductions
+  if (state === "California") {
+    deductions.push({
+      id: "ca_college_access",
+      name: "College Access Tax Credit",
+      description: "Tax credit for contributions to Cal Grants",
+      icon: "graduation-cap",
+      eligibleAmount: income * 0.02, // Simplified calculation
+      eligibilityMessage: "California offers credits for contributions to the College Access Tax Credit Fund."
+    });
+  }
+  
+  if (state === "New York") {
+    deductions.push({
+      id: "ny_college_tuition",
+      name: "College Tuition Credit",
+      description: "Credit for qualified college tuition expenses",
+      icon: "graduation-cap",
+      eligibleAmount: 1000, // Fixed amount
+      eligibilityMessage: "New York offers a credit for qualified college tuition expenses up to $10,000."
+    });
+  }
+  
+  return deductions;
+}
