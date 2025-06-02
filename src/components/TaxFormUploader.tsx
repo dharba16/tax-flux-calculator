@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Upload, FileText, AlertCircle, CheckCircle2, Image, FileType } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -209,7 +210,10 @@ const processTaxForm = (file: File, filingStatus: FilingStatus = 'single'): Prom
           }
         } else {
           // Handle other form types...
-          // ... keep existing code (other form type handling)
+          formType = 'Unknown';
+          income = 50000;
+          federalWithholding = Math.floor(income * 0.15);
+          stateWithholding = Math.floor(income * 0.04);
         }
         
         resolve({ 

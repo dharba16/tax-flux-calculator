@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
@@ -8,6 +7,7 @@ import ResultsDisplay from './ResultsDisplay';
 import DeductionsEligibility from './DeductionsEligibility';
 import StateTaxSettings from './StateTaxSettings';
 import ScenarioCompare, { TaxScenario, SelectedDeduction } from './ScenarioCompare';
+import TaxFormUploader from './TaxFormUploader';
 import { calculateTaxes, TaxResults, FilingStatus } from '@/utils/taxCalculations';
 import { getEligibleDeductions, DeductionInfo } from '@/utils/deductionEligibility';
 import { calculateStateTaxes, getStateDeductionInfo } from '@/utils/stateTaxCalculations';
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CheckIcon, GlobeIcon, Columns } from 'lucide-react';
+import { CheckIcon, GlobeIcon, Columns, Upload } from 'lucide-react';
 import { authService, User } from '@/services/authService';
 import { profileService } from '@/services/profileService';
 import { toast } from 'sonner';
@@ -94,6 +94,25 @@ const TaxCalculator: React.FC = () => {
         return null;
       })
       .filter((d): d is SelectedDeduction => d !== null);
+  };
+  
+  // Handle form upload processing
+  const handleFormProcessed = (formData: {
+    income?: number;
+    federalWithholding?: number;
+    stateWithholding?: number;
+  }) => {
+    if (formData.income) {
+      setIncome(formData.income);
+    }
+    if (formData.federalWithholding) {
+      setFederalWithholding(formData.federalWithholding);
+    }
+    if (formData.stateWithholding) {
+      setStateWithholding(formData.stateWithholding);
+    }
+    
+    toast.success('Tax form data imported successfully!');
   };
   
   const handleLogin = (email: string, password: string) => {
@@ -205,7 +224,6 @@ const TaxCalculator: React.FC = () => {
       });
       
       if (stateResult) {
-        // Cast as TaxResults to fix type issues
         setStateResults(stateResult as unknown as TaxResults);
 
         const stateDeductionsList = getStateDeductionInfo(income, filingStatus, selectedState);
@@ -245,8 +263,12 @@ const TaxCalculator: React.FC = () => {
                 onValueChange={setActiveTab}
                 className="w-full mb-4"
               >
-                <TabsList className="grid w-full grid-cols-4">
+                <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="income">Income</TabsTrigger>
+                  <TabsTrigger value="upload">
+                    <Upload className="h-4 w-4 mr-1" />
+                    Upload
+                  </TabsTrigger>
                   <TabsTrigger value="deductions">Deductions</TabsTrigger>
                   <TabsTrigger value="compare">
                     <Columns className="h-4 w-4 mr-1" />
@@ -305,6 +327,10 @@ const TaxCalculator: React.FC = () => {
                       </div>
                     )}
                   </div>
+                </TabsContent>
+                
+                <TabsContent value="upload" className="mt-4">
+                  <TaxFormUploader onFormProcessed={handleFormProcessed} />
                 </TabsContent>
                 
                 <TabsContent value="deductions" className="mt-4">
