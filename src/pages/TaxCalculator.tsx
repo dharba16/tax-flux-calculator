@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TaxCalculator from '@/components/TaxCalculator';
@@ -19,9 +18,19 @@ const TaxCalculatorPage = () => {
   const [isSignup, setIsSignup] = useState(false);
   const navigate = useNavigate();
 
+  // Check for user on mount and set up polling for auth state changes
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    setUser(currentUser);
+    const checkAuthState = () => {
+      const currentUser = authService.getCurrentUser();
+      setUser(currentUser);
+    };
+    
+    checkAuthState();
+    
+    // Poll for auth state changes every 100ms to catch updates from Navigation component
+    const interval = setInterval(checkAuthState, 100);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
