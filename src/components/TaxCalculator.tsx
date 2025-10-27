@@ -46,8 +46,6 @@ const TaxCalculator: React.FC = () => {
   const [useStandardDeduction, setUseStandardDeduction] = useState<boolean>(true);
   const [includeStateTaxes, setIncludeStateTaxes] = useState<boolean>(false);
   const [selectedState, setSelectedState] = useState<string>('California');
-  const [isInternationalStudent, setIsInternationalStudent] = useState<boolean>(false);
-  const [allStateResults, setAllStateResults] = useState<Record<string, any>>({});
   
   const [results, setResults] = useState<TaxResults | null>(null);
   const [stateResults, setStateResults] = useState<TaxResults | null>(null);
@@ -215,54 +213,30 @@ const TaxCalculator: React.FC = () => {
     setEligibleDeductions(deductionsList);
 
     if (includeStateTaxes) {
-      if (isInternationalStudent) {
-        // Calculate for all states
-        const allResults: Record<string, any> = {};
-        US_STATES.forEach(state => {
-          const stateResult = calculateStateTaxes({
-            income,
-            filingStatus,
-            deductions,
-            useStandardDeduction,
-            state,
-            withholding: stateWithholding,
-            selectedDeductions
-          });
-          if (stateResult) {
-            allResults[state] = stateResult;
-          }
-        });
-        setAllStateResults(allResults);
-        setStateResults(null);
-      } else {
-        // Calculate for selected state only
-        const stateResult = calculateStateTaxes({
-          income,
-          filingStatus,
-          deductions,
-          useStandardDeduction,
-          state: selectedState,
-          withholding: stateWithholding,
-          selectedDeductions
-        });
-        
-        if (stateResult) {
-          setStateResults(stateResult as unknown as TaxResults);
+      const stateResult = calculateStateTaxes({
+        income,
+        filingStatus,
+        deductions,
+        useStandardDeduction,
+        state: selectedState,
+        withholding: stateWithholding,
+        selectedDeductions
+      });
+      
+      if (stateResult) {
+        setStateResults(stateResult as unknown as TaxResults);
 
-          const stateDeductionsList = getStateDeductionInfo(income, filingStatus, selectedState);
-          setStateEligibleDeductions(stateDeductionsList);
-        } else {
-          setStateResults(null);
-          setStateEligibleDeductions([]);
-        }
-        setAllStateResults({});
+        const stateDeductionsList = getStateDeductionInfo(income, filingStatus, selectedState);
+        setStateEligibleDeductions(stateDeductionsList);
+      } else {
+        setStateResults(null);
+        setStateEligibleDeductions([]);
       }
     } else {
       setStateResults(null);
       setStateEligibleDeductions([]);
-      setAllStateResults({});
     }
-  }, [income, federalWithholding, stateWithholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState, selectedDeductionIds, isInternationalStudent]);
+  }, [income, federalWithholding, stateWithholding, filingStatus, deductions, useStandardDeduction, includeStateTaxes, selectedState, selectedDeductionIds]);
 
   const currentScenario: Omit<TaxScenario, 'id' | 'name'> = {
     income,
@@ -316,55 +290,40 @@ const TaxCalculator: React.FC = () => {
                     includeStateTaxes={includeStateTaxes}
                   />
                   
-                  <div className="mt-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="state-taxes"
-                          checked={includeStateTaxes}
-                          onCheckedChange={(checked) => {
-                            setIncludeStateTaxes(checked);
-                            if (checked && activeTab !== 'state') {
-                              setActiveTab('state');
-                            }
-                          }}
-                        />
-                        <Label htmlFor="state-taxes" className="text-sm cursor-pointer">
-                          Include State Taxes
-                        </Label>
-                      </div>
-                      
-                      {includeStateTaxes && !isInternationalStudent && (
-                        <div className="flex-1 max-w-[180px] ml-4">
-                          <Select
-                            value={selectedState}
-                            onValueChange={setSelectedState}
-                          >
-                            <SelectTrigger className="w-full h-9">
-                              <SelectValue placeholder="Select State" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {US_STATES.map((state) => (
-                                <SelectItem key={state} value={state}>
-                                  {state}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="state-taxes"
+                        checked={includeStateTaxes}
+                        onCheckedChange={(checked) => {
+                          setIncludeStateTaxes(checked);
+                          if (checked && activeTab !== 'state') {
+                            setActiveTab('state');
+                          }
+                        }}
+                      />
+                      <Label htmlFor="state-taxes" className="text-sm cursor-pointer">
+                        Include State Taxes
+                      </Label>
                     </div>
                     
                     {includeStateTaxes && (
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="international-student"
-                          checked={isInternationalStudent}
-                          onCheckedChange={setIsInternationalStudent}
-                        />
-                        <Label htmlFor="international-student" className="text-sm cursor-pointer">
-                          International Student (Compare All States)
-                        </Label>
+                      <div className="flex-1 max-w-[180px] ml-4">
+                        <Select
+                          value={selectedState}
+                          onValueChange={setSelectedState}
+                        >
+                          <SelectTrigger className="w-full h-9">
+                            <SelectValue placeholder="Select State" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {US_STATES.map((state) => (
+                              <SelectItem key={state} value={state}>
+                                {state}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     )}
                   </div>
@@ -425,8 +384,6 @@ const TaxCalculator: React.FC = () => {
               stateResults={stateResults}
               includeStateTaxes={includeStateTaxes}
               selectedState={selectedState}
-              isInternationalStudent={isInternationalStudent}
-              allStateResults={allStateResults}
             />
           )}
         </div>

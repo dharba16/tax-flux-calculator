@@ -11,17 +11,13 @@ interface ResultsDisplayProps {
   stateResults?: TaxResults | null;
   includeStateTaxes?: boolean;
   selectedState?: string;
-  isInternationalStudent?: boolean;
-  allStateResults?: Record<string, any>;
 }
 
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ 
   results, 
   stateResults = null,
   includeStateTaxes = false,
-  selectedState = '',
-  isInternationalStudent = false,
-  allStateResults = {}
+  selectedState = ''
 }) => {
   const isRefund = results.refundOrOwed > 0;
   
@@ -31,115 +27,6 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
     : results.refundOrOwed;
   
   const isCombinedRefund = combinedRefundOrOwed > 0;
-  
-  // If international student, show all state comparison
-  if (isInternationalStudent && includeStateTaxes) {
-    const sortedStates = Object.entries(allStateResults)
-      .map(([state, result]) => ({
-        state,
-        taxLiability: result.taxLiability || 0,
-        refundOrOwed: result.refundOrOwed || 0,
-        effectiveRate: result.effectiveTaxRate || 0
-      }))
-      .sort((a, b) => a.taxLiability - b.taxLiability);
-    
-    return (
-      <div className="animate-fade-in space-y-6">
-        <Card className="overflow-hidden border border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-center mb-4">
-              <GlobeIcon className="w-5 h-5 mr-2 text-primary" />
-              <h3 className="text-lg font-semibold">All States Tax Comparison</h3>
-            </div>
-            <p className="text-sm text-muted-foreground text-center mb-4">
-              Sorted by lowest to highest tax liability
-            </p>
-            <div className="max-h-[600px] overflow-y-auto">
-              <div className="space-y-2">
-                {sortedStates.map(({ state, taxLiability, refundOrOwed, effectiveRate }) => (
-                  <div 
-                    key={state}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border/50 bg-card/80 hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <h4 className="font-medium">{state}</h4>
-                      <p className="text-xs text-muted-foreground">
-                        Effective Rate: {formatPercentage(effectiveRate)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {formatCurrency(taxLiability)}
-                      </div>
-                      <div className={`text-xs ${refundOrOwed > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {refundOrOwed > 0 ? 'Refund: ' : 'Owed: '}
-                        {formatCurrency(Math.abs(refundOrOwed))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Federal Tax Card */}
-        <Card className="overflow-hidden border border-border/50 bg-blue-50 dark:bg-blue-950/20 backdrop-blur-sm">
-          <CardContent className="p-5">
-            <div className="space-y-5">
-              <div className="flex items-center mb-2">
-                <DollarSignIcon className="w-5 h-5 mr-2 text-blue-600 dark:text-blue-400" />
-                <h3 className="text-base font-medium">Federal Tax Results</h3>
-              </div>
-              
-              <div className="flex flex-col items-center justify-center text-center mb-5">
-                <p className="text-sm text-muted-foreground mb-1">
-                  {isRefund ? "Federal Refund" : "Federal Amount Due"}
-                </p>
-                <div className={`flex items-center text-3xl md:text-4xl font-semibold min-w-32 ${isRefund ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  <AnimatedNumber 
-                    value={Math.abs(results.refundOrOwed)}
-                    formatter={(val) => formatCurrency(val)}
-                    duration={800}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                <div className="flex flex-col items-center text-center">
-                  <p className="text-xs text-muted-foreground">Taxable Income</p>
-                  <div className="text-base font-medium min-w-24">
-                    <AnimatedNumber 
-                      value={results.taxableIncome}
-                      formatter={formatCurrency}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <p className="text-xs text-muted-foreground">Tax Liability</p>
-                  <div className="text-base font-medium min-w-24">
-                    <AnimatedNumber 
-                      value={results.taxLiability}
-                      formatter={formatCurrency}
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col items-center text-center">
-                  <p className="text-xs text-muted-foreground">Effective Rate</p>
-                  <div className="text-base font-medium min-w-24">
-                    <AnimatedNumber 
-                      value={results.effectiveTaxRate}
-                      formatter={formatPercentage}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
   
   return (
     <div className="animate-fade-in space-y-6">
