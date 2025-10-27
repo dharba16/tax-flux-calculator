@@ -46,6 +46,7 @@ const TaxCalculator: React.FC = () => {
   const [useStandardDeduction, setUseStandardDeduction] = useState<boolean>(true);
   const [includeStateTaxes, setIncludeStateTaxes] = useState<boolean>(false);
   const [selectedState, setSelectedState] = useState<string>('California');
+  const [isInternationalStudent, setIsInternationalStudent] = useState<boolean>(false);
   
   const [results, setResults] = useState<TaxResults | null>(null);
   const [stateResults, setStateResults] = useState<TaxResults | null>(null);
@@ -290,42 +291,55 @@ const TaxCalculator: React.FC = () => {
                     includeStateTaxes={includeStateTaxes}
                   />
                   
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="state-taxes"
-                        checked={includeStateTaxes}
-                        onCheckedChange={(checked) => {
-                          setIncludeStateTaxes(checked);
-                          if (checked && activeTab !== 'state') {
-                            setActiveTab('state');
-                          }
-                        }}
-                      />
-                      <Label htmlFor="state-taxes" className="text-sm cursor-pointer">
-                        Include State Taxes
-                      </Label>
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="state-taxes"
+                          checked={includeStateTaxes}
+                          onCheckedChange={(checked) => {
+                            setIncludeStateTaxes(checked);
+                            if (checked && activeTab !== 'state') {
+                              setActiveTab('state');
+                            }
+                          }}
+                        />
+                        <Label htmlFor="state-taxes" className="text-sm cursor-pointer">
+                          Include State Taxes
+                        </Label>
+                      </div>
+                      
+                      {includeStateTaxes && (
+                        <div className="flex-1 max-w-[180px] ml-4">
+                          <Select
+                            value={selectedState}
+                            onValueChange={setSelectedState}
+                          >
+                            <SelectTrigger className="w-full h-9">
+                              <SelectValue placeholder="Select State" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state} value={state}>
+                                  {state}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                     
-                    {includeStateTaxes && (
-                      <div className="flex-1 max-w-[180px] ml-4">
-                        <Select
-                          value={selectedState}
-                          onValueChange={setSelectedState}
-                        >
-                          <SelectTrigger className="w-full h-9">
-                            <SelectValue placeholder="Select State" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {US_STATES.map((state) => (
-                              <SelectItem key={state} value={state}>
-                                {state}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="international-student"
+                        checked={isInternationalStudent}
+                        onCheckedChange={setIsInternationalStudent}
+                      />
+                      <Label htmlFor="international-student" className="text-sm cursor-pointer">
+                        International Student
+                      </Label>
+                    </div>
                   </div>
                 </TabsContent>
                 
