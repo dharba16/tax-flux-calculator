@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { TaxResults, formatCurrency, formatPercentage } from '@/utils/taxCalculations';
 import AnimatedNumber from './AnimatedNumber';
-import { ArrowDownIcon, ArrowUpIcon, DollarSignIcon, GlobeIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, DollarSignIcon, GlobeIcon, AlertCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 interface ResultsDisplayProps {
@@ -173,129 +174,148 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
       )}
       
       {/* State Tax Card */}
-      {includeStateTaxes && stateResults && (
+      {includeStateTaxes && (
         <>
-          <Card className="overflow-hidden border border-border/50 bg-green-50 dark:bg-green-950/20 backdrop-blur-sm">
-            <CardContent className="p-5">
-              <div className="space-y-5">
-                <div className="flex items-center mb-2">
-                  <GlobeIcon className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
-                  <h3 className="text-base font-medium">{selectedState} State Tax Results</h3>
-                </div>
-                
-                {["Florida", "Texas", "Washington", "Nevada", "Alaska", "Wyoming", "South Dakota"].includes(selectedState) ? (
-                  <div className="text-center py-4">
-                    <h3 className="text-lg font-medium mb-2">No State Income Tax</h3>
-                    <p className="text-muted-foreground">
-                      {selectedState} does not impose a state income tax on residents.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="flex flex-col items-center justify-center text-center mb-5">
-                      <p className="text-sm text-muted-foreground mb-1">
-                        {stateResults.refundOrOwed > 0 ? "State Refund" : "State Amount Due"}
-                      </p>
-                      <div className={`flex items-center text-3xl md:text-4xl font-semibold min-w-32 ${stateResults.refundOrOwed > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        <AnimatedNumber 
-                          value={Math.abs(stateResults.refundOrOwed)}
-                          formatter={(val) => formatCurrency(val)}
-                          duration={800}
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-                      <div className="flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground">Taxable Income</p>
-                        <div className="text-base font-medium min-w-24">
-                          <AnimatedNumber 
-                            value={stateResults.taxableIncome}
-                            formatter={formatCurrency}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground">Tax Liability</p>
-                        <div className="text-base font-medium min-w-24">
-                          <AnimatedNumber 
-                            value={stateResults.taxLiability}
-                            formatter={formatCurrency}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground">Effective Rate</p>
-                        <div className="text-base font-medium min-w-24">
-                          <AnimatedNumber 
-                            value={stateResults.effectiveTaxRate}
-                            formatter={formatPercentage}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground">Marginal Rate</p>
-                        <div className="text-base font-medium min-w-24">
-                          <AnimatedNumber 
-                            value={stateResults.marginalRate}
-                            formatter={formatPercentage}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-center text-center">
-                        <p className="text-xs text-muted-foreground">Deduction</p>
-                        <div className="text-base font-medium min-w-24">
-                          <AnimatedNumber 
-                            value={stateResults.deductionAmount}
-                            formatter={formatCurrency}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-          
-          {/* State Tax Bracket Breakdown */}
-          {stateResults.bracketBreakdown.length > 0 && stateResults.bracketBreakdown[0].rate > 0 && (
-            <Card className="overflow-hidden border border-border/50 bg-green-50 dark:bg-green-950/20 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <h3 className="text-sm font-medium mb-3 flex items-center">
-                  <GlobeIcon className="w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
-                  {selectedState} State Tax Bracket Breakdown
-                </h3>
-                <div className="space-y-2">
-                  {stateResults.bracketBreakdown.map((bracket, index) => (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <div className="flex items-center">
-                        <div 
-                          className="w-3 h-3 rounded-full mr-2" 
-                          style={{ 
-                            backgroundColor: `hsl(${150 - index * 20}, ${65}%, ${55 + index * 5}%)` 
-                          }}
-                        />
-                        <span>{formatPercentage(bracket.rate)} bracket</span>
-                      </div>
-                      <div className="flex items-center">
-                        <span className="mr-2 text-muted-foreground">
-                          {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
-                        </span>
-                        <span className="font-medium min-w-20 text-right">{formatCurrency(bracket.amount)}</span>
-                      </div>
-                    </div>
-                  ))}
-                  <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
-                    <span>Total {selectedState} State Tax</span>
-                    <span className="min-w-20 text-right">{formatCurrency(stateResults.taxLiability)}</span>
-                  </div>
-                </div>
+          {stateResults === null ? (
+            <Card className="overflow-hidden border border-border/50 bg-yellow-50 dark:bg-yellow-950/20 backdrop-blur-sm">
+              <CardContent className="p-5">
+                <Alert className="border-0">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>State Tax Data Unavailable</AlertTitle>
+                  <AlertDescription>
+                    Tax information for {selectedState} is not currently available in our system. 
+                    {['Texas', 'Florida', 'Alaska', 'Nevada', 'South Dakota', 'Tennessee', 'Washington', 'Wyoming', 'New Hampshire'].includes(selectedState) 
+                      ? ` Note: ${selectedState} does not have a state income tax.`
+                      : ' Please check back later or select a different state with available data.'}
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
+          ) : (
+            <>
+              <Card className="overflow-hidden border border-border/50 bg-green-50 dark:bg-green-950/20 backdrop-blur-sm">
+                <CardContent className="p-5">
+                  <div className="space-y-5">
+                    <div className="flex items-center mb-2">
+                      <GlobeIcon className="w-5 h-5 mr-2 text-green-600 dark:text-green-400" />
+                      <h3 className="text-base font-medium">{selectedState} State Tax Results</h3>
+                    </div>
+                    
+                    {["Florida", "Texas", "Washington", "Nevada", "Alaska", "Wyoming", "South Dakota"].includes(selectedState) ? (
+                      <div className="text-center py-4">
+                        <h3 className="text-lg font-medium mb-2">No State Income Tax</h3>
+                        <p className="text-muted-foreground">
+                          {selectedState} does not impose a state income tax on residents.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-col items-center justify-center text-center mb-5">
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {stateResults.refundOrOwed > 0 ? "State Refund" : "State Amount Due"}
+                          </p>
+                          <div className={`flex items-center text-3xl md:text-4xl font-semibold min-w-32 ${stateResults.refundOrOwed > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            <AnimatedNumber 
+                              value={Math.abs(stateResults.refundOrOwed)}
+                              formatter={(val) => formatCurrency(val)}
+                              duration={800}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                          <div className="flex flex-col items-center text-center">
+                            <p className="text-xs text-muted-foreground">Taxable Income</p>
+                            <div className="text-base font-medium min-w-24">
+                              <AnimatedNumber 
+                                value={stateResults.taxableIncome}
+                                formatter={formatCurrency}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center text-center">
+                            <p className="text-xs text-muted-foreground">Tax Liability</p>
+                            <div className="text-base font-medium min-w-24">
+                              <AnimatedNumber 
+                                value={stateResults.taxLiability}
+                                formatter={formatCurrency}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center text-center">
+                            <p className="text-xs text-muted-foreground">Effective Rate</p>
+                            <div className="text-base font-medium min-w-24">
+                              <AnimatedNumber 
+                                value={stateResults.effectiveTaxRate}
+                                formatter={formatPercentage}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex flex-col items-center text-center">
+                            <p className="text-xs text-muted-foreground">Marginal Rate</p>
+                            <div className="text-base font-medium min-w-24">
+                              <AnimatedNumber 
+                                value={stateResults.marginalRate}
+                                formatter={formatPercentage}
+                              />
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-center text-center">
+                            <p className="text-xs text-muted-foreground">Deduction</p>
+                            <div className="text-base font-medium min-w-24">
+                              <AnimatedNumber 
+                                value={stateResults.deductionAmount}
+                                formatter={formatCurrency}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+              
+              {/* State Tax Bracket Breakdown */}
+              {stateResults.bracketBreakdown.length > 0 && stateResults.bracketBreakdown[0].rate > 0 && (
+                <Card className="overflow-hidden border border-border/50 bg-green-50 dark:bg-green-950/20 backdrop-blur-sm">
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-medium mb-3 flex items-center">
+                      <GlobeIcon className="w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
+                      {selectedState} State Tax Bracket Breakdown
+                    </h3>
+                    <div className="space-y-2">
+                      {stateResults.bracketBreakdown.map((bracket, index) => (
+                        <div key={index} className="flex justify-between items-center text-sm">
+                          <div className="flex items-center">
+                            <div 
+                              className="w-3 h-3 rounded-full mr-2" 
+                              style={{ 
+                                backgroundColor: `hsl(${150 - index * 20}, ${65}%, ${55 + index * 5}%)` 
+                              }}
+                            />
+                            <span>{formatPercentage(bracket.rate)} bracket</span>
+                          </div>
+                          <div className="flex items-center">
+                            <span className="mr-2 text-muted-foreground">
+                              {formatCurrency(bracket.rangeStart)} - {bracket.rangeEnd === Infinity ? '+' : formatCurrency(bracket.rangeEnd)}
+                            </span>
+                            <span className="font-medium min-w-20 text-right">{formatCurrency(bracket.amount)}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex justify-between items-center pt-2 border-t border-border mt-2 text-sm font-medium">
+                        <span>Total {selectedState} State Tax</span>
+                        <span className="min-w-20 text-right">{formatCurrency(stateResults.taxLiability)}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </>
           )}
         </>
       )}
